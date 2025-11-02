@@ -1,16 +1,17 @@
-import cors from 'cors';
-import express, { Application, Request, Response } from 'express';
+import express, { Application } from "express";
+import { errorHandler } from "./app/middleware/errorHandler";
+import { setupMiddlewares } from "./app/middleware/setup";
+import { setupRoutes } from "./app/routes";
+
 const app: Application = express();
 
-//parser
-app.use(express.json());
+// Setup application-level middleware
+setupMiddlewares(app);
 
-//cors
-app.use(cors());
+// Setup routes
+setupRoutes(app);
 
-//home
-app.get('/', (req: Request, res: Response) => {
-  res.send('Hello World!');
-});
+// Global error handler
+app.use(errorHandler);
 
 export default app;
