@@ -1,16 +1,12 @@
-import { Router } from "express";
-import { authController } from "../../controllers/auth.controller";
-import { verifyToken } from "../../middleware/auth/auth.middleware";
+import express from "express";
+import validateRequest from "../../middlewares/validateRequest";
 
-const router = Router();
+import { AuthControllers } from "../../controllers/auth.controllers";
+import { loginSchema, signupSchema } from "../../validations/auth.validation";
 
-// Public routes (no auth required)
-router.post("/register", authController.register);
-router.post("/login", authController.login);
+const router = express.Router();
 
-// Protected routes (auth required)
-router.get("/profile", verifyToken, authController.getProfile);
-router.patch("/profile", verifyToken, authController.updateProfile);
-router.post("/change-password", verifyToken, authController.changePassword);
+router.post("/signup", validateRequest(signupSchema), AuthControllers.signup);
+router.post("/login", validateRequest(loginSchema), AuthControllers.login);
 
 export const authRoutes = router;

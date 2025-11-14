@@ -1,101 +1,62 @@
-/* eslint-disable no-useless-catch */
-/* eslint-disable @typescript-eslint/no-explicit-any */
-import bcrypt from "bcryptjs";
-import jwt from "jsonwebtoken";
+import bcrypt from "bcrypt";
 import { Schema, model } from "mongoose";
-import config from "../app/config";
 import { IUser, UserRole } from "../interfaces/user.interface";
+
+const freelancerProfileSchema = new Schema(
+  {
+    hourlyRate: Number,
+    skills: [String],
+    portfolio: [String],
+    bio: String,
+    experience: String,
+    availability: {
+      type: String,
+      enum: ["available", "busy", "unavailable"],
+      default: "available",
+    },
+  },
+  { _id: false },
+);
+
+const clientProfileSchema = new Schema(
+  {
+    companyName: String,
+    companyWebsite: String,
+    industry: String,
+  },
+  { _id: false },
+);
 
 const userSchema = new Schema<IUser>(
   {
-    name: {
-      type: String,
-      required: [true, "Name is required"],
-      trim: true,
-      minlength: [2, "Name must be at least 2 characters long"],
-    },
+    name: { type: String, required: true, trim: true },
     email: {
       type: String,
-      required: [true, "Email is required"],
+      required: true,
       unique: true,
-      trim: true,
       lowercase: true,
-      validate: {
-        validator: function (value: string) {
-          return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(value);
-        },
-        message: "Please enter a valid email",
-      },
+      trim: true,
     },
-    password: {
-      type: String,
-      required: [true, "Password is required"],
-      minlength: [6, "Password must be at least 6 characters long"],
-      select: false,
-    },
+    password: { type: String, required: true, minlength: 6, select: false },
     role: {
       type: String,
-      enum: {
-        values: ["client", "freelancer", "admin"] as UserRole[],
-        message: "Role must be either client, freelancer, or admin",
-      },
+      enum: ["client", "freelancer", "admin"] as UserRole[],
       default: "client",
     },
+    phone: String,
+    avatar: String,
+    freelancerProfile: freelancerProfileSchema,
+    clientProfile: clientProfileSchema,
+    isEmailVerified: { type: Boolean, default: false },
   },
-  {
-    timestamps: true,
-    toJSON: {
-      transform: (_doc, ret: Record<string, any>) => {
-        const transformed = {
-          id: ret._id.toString(),
-          name: ret.name,
-          email: ret.email,
-          role: ret.role,
-          createdAt: ret.createdAt,
-          updatedAt: ret.updatedAt,
-        };
-        return transformed;
-      },
-    },
-  }
+  { timestamps: true },
 );
 
 // Hash password before saving
 userSchema.pre("save", async function (next) {
-  if (!this.isModified("password")) {
-    return next();
-  }
-
-  try {
-    const salt = await bcrypt.genSalt(10);
-    this.password = await bcrypt.hash(this.password, salt);
-    next();
-  } catch (error) {
-    next(error as Error);
-  }
+  if (!this.isModified("password")) return next();
+  this.password = await bcrypt.hash(this.password, 12);
+  next();
 });
-
-// Compare password method
-userSchema.methods.comparePassword = async function (
-  candidatePassword: string
-): Promise<boolean> {
-  try {
-    return await bcrypt.compare(candidatePassword, this.password);
-  } catch (error) {
-    throw error;
-  }
-};
-
-// Generate JWT token
-userSchema.methods.generateAuthToken = function (): string {
-  return jwt.sign(
-    {
-      userId: this._id.toString(),
-      role: this.role,
-    },
-    config.jwt.secret as string,
-    { expiresIn: "7d" }
-  );
-};
 
 export const User = model<IUser>("User", userSchema);

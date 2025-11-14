@@ -1,14 +1,32 @@
-import { Document } from "mongoose";
+export type UserRole = "client" | "freelancer" | "admin";
 
-export type UserRole = "admin" | "client" | "freelancer";
+export interface IFreelancerProfile {
+  hourlyRate?: number;
+  skills?: string[];
+  portfolio?: string[];
+  bio?: string;
+  experience?: string;
+  availability?: "available" | "busy" | "unavailable";
+}
 
-export interface IUser extends Document {
+export interface IClientProfile {
+  companyName?: string;
+  companyWebsite?: string;
+  industry?: string;
+}
+
+export interface IUser {
+  _id?: string;
+  id?: string;
+  name: string;
   email: string;
   password: string;
-  name: string;
   role: UserRole;
-  createdAt: Date;
-  updatedAt: Date;
-  comparePassword(password: string): Promise<boolean>;
-  generateAuthToken(): string;
+  phone?: string;
+  avatar?: string;
+  freelancerProfile?: IFreelancerProfile;
+  clientProfile?: IClientProfile;
+  isEmailVerified?: boolean;
+  createdAt?: Date;
+  updatedAt?: Date;
 }

@@ -1,20 +1,15 @@
-import mongoose from 'mongoose';
-import app from './app';
-import config from './app/config';
+/* eslint-disable @typescript-eslint/no-unused-vars */
+import { Server } from "http";
+import app from "./app";
+import config from "./config";
+import connectDB from "./config/database";
 
 async function main() {
-  try {
-    await mongoose.connect(String(config.databaseUrl));
-    console.log('Database connected successfully');
+  await connectDB();
 
-    const port = config.port || 5000;
-    app.listen(port, () => {
-      console.log(`Server is running on port ${port}`);
-    });
-  } catch (error) {
-    console.error('Database connection failed:', error);
-    process.exit(1);
-  }
+  const server: Server = app.listen(config.port, () => {
+    console.log("Server is running on port ", config.port);
+  });
 }
 
 main();

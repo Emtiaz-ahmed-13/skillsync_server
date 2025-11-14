@@ -1,34 +1,28 @@
 import { Application, Request, Response } from "express";
-import { authRoutes } from "../routes/v1/auth.routes";
+import router from "./routes/index";
 
-/**
- * Setup application routes
- * @param app Express application instance
- */
 export const setupRoutes = (app: Application): void => {
-  // API Routes
-  app.use("/api/v1/auth", authRoutes);
+  // Base route for API
+  app.get("/api/v1/router", (req: Request, res: Response) => {
+    res.status(200).json({
+      success: true,
+      message: "API Base Route - Available endpoints listed",
+      endpoints: {
+        auth: "/api/v1/auth",
+        profile: "/api/v1/profile",
+      },
+    });
+  });
+
+  // Main API routes - this will delegate to index.ts
+  app.use("/api/v1", router);
 
   // Health check endpoint
-  app.get("/health", (req: Request, res: Response) => {
+  app.get("/health", (_req: Request, res: Response) => {
     res.status(200).json({
       success: true,
       message: "Server is running",
       timestamp: new Date().toISOString(),
-    });
-  });
-
-  // Home route
-  app.get("/", (req: Request, res: Response) => {
-    res.send("Hello World!");
-  });
-
-  // 404 handler for unmatched routes
-  app.use((req: Request, res: Response) => {
-    res.status(404).json({
-      success: false,
-      message: `Route ${req.originalUrl} not found`,
-      status: 404,
     });
   });
 };
