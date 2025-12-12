@@ -1,3 +1,5 @@
+import { Types } from "mongoose";
+
 export type UserRole = "client" | "freelancer" | "admin";
 
 export interface IFreelancerProfile {
@@ -16,7 +18,7 @@ export interface IClientProfile {
 }
 
 export interface IUser {
-  _id?: string;
+  _id?: Types.ObjectId;
   id?: string;
   name: string;
   email: string;

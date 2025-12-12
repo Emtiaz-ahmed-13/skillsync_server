@@ -51,9 +51,22 @@ const updateClientProfile = catchAsync(async (req: Request & { user?: any }, res
   });
 });
 
+const deleteProfile = catchAsync(async (req: Request & { user?: any }, res: Response) => {
+  const userId = req.user?.id || req.user?._id;
+  const result = await ProfileService.deleteProfile(userId);
+
+  sendResponse(res, {
+    statusCode: 200,
+    success: true,
+    message: "Profile deleted successfully",
+    data: result,
+  });
+});
+
 export const ProfileController = {
   getProfile,
   updateProfile,
   updateFreelancerProfile,
   updateClientProfile,
+  deleteProfile,
 };
