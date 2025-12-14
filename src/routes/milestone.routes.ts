@@ -9,6 +9,9 @@ const router = express.Router();
 // GET /milestones/:id - Get specific milestone
 router.get("/:id", MilestoneControllers.getMilestoneById);
 
+// PUT /milestones/:id/complete - Mark milestone as complete
+router.put("/:id/complete", auth(), MilestoneControllers.completeMilestone);
+
 // PUT /milestones/:id - Update milestone
 router.put(
   "/:id",

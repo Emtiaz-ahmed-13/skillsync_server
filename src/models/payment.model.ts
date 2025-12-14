@@ -69,14 +69,4 @@ const paymentSchema = new Schema<IPayment>(
   { timestamps: true },
 );
 
-// Index for efficient queries
-paymentSchema.index({ projectId: 1 });
-paymentSchema.index({ milestoneId: 1 });
-paymentSchema.index({ clientId: 1 });
-paymentSchema.index({ freelancerId: 1 });
-paymentSchema.index({ status: 1 });
-paymentSchema.index({ method: 1 });
-paymentSchema.index({ stripePaymentIntentId: 1 });
-paymentSchema.index({ createdAt: -1 });
-
 export const Payment = model<IPayment>("Payment", paymentSchema);

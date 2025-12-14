@@ -43,11 +43,4 @@ const timeTrackingSchema = new Schema<ITimeTracking>(
   { timestamps: true },
 );
 
-// Index for efficient queries
-timeTrackingSchema.index({ projectId: 1 });
-timeTrackingSchema.index({ milestoneId: 1 });
-timeTrackingSchema.index({ taskId: 1 });
-timeTrackingSchema.index({ userId: 1 });
-timeTrackingSchema.index({ startTime: -1 });
-
 export const TimeTracking = model<ITimeTracking>("TimeTracking", timeTrackingSchema);

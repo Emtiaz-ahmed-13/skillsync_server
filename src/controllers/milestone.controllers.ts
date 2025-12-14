@@ -39,8 +39,21 @@ const deleteMilestone = catchAsync(async (req: Request & { user?: any }, res: Re
   });
 });
 
+const completeMilestone = catchAsync(async (req: Request & { user?: any }, res: Response) => {
+  const { id } = req.params;
+  const result = await ProjectServices.completeMilestone(id, req.user.id || req.user._id);
+
+  sendResponse(res, {
+    statusCode: 200,
+    success: true,
+    message: "Milestone completed successfully",
+    data: result,
+  });
+});
+
 export const MilestoneControllers = {
   getMilestoneById,
   updateMilestone,
   deleteMilestone,
+  completeMilestone,
 };

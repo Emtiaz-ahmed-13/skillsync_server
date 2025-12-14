@@ -6,6 +6,8 @@ export const createProjectSchema = z.object({
     description: z.string().optional(),
     ownerId: z.string().min(1, "Owner ID is required"),
     status: z.enum(["pending", "in_progress", "completed", "cancelled"]).default("pending"),
+    budget: z.number().positive().optional(),
+    minBidAmount: z.number().nonnegative().optional(),
   }),
 });
 
@@ -31,6 +33,8 @@ export const updateProjectSchema = z.object({
     title: z.string().min(1, "Title is required").trim().optional(),
     description: z.string().optional(),
     status: z.enum(["pending", "in_progress", "completed", "cancelled"]).optional(),
+    budget: z.number().positive().optional(),
+    minBidAmount: z.number().nonnegative().optional(),
   }),
 });
 
@@ -78,5 +82,19 @@ export const bulkUpdateMilestonesSchema = z.object({
         }),
       )
       .min(1, "At least one milestone update is required"),
+  }),
+});
+
+// New validation schemas for bidding functionality
+export const placeBidSchema = z.object({
+  body: z.object({
+    amount: z.number().positive("Bid amount must be positive"),
+    proposal: z.string().min(10, "Proposal must be at least 10 characters"),
+  }),
+});
+
+export const updateBidSchema = z.object({
+  body: z.object({
+    status: z.enum(["accepted", "rejected"]),
   }),
 });

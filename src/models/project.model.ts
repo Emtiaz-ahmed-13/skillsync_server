@@ -1,5 +1,5 @@
 import { Schema, model } from "mongoose";
-import { IProject, ProjectStatus } from "../interfaces/project.interface";
+import { IProject } from "../interfaces/project.interface";
 
 const projectSchema = new Schema<IProject>(
   {
@@ -17,18 +17,23 @@ const projectSchema = new Schema<IProject>(
       ref: "User",
       required: true,
     },
+    assignedFreelancerId: {
+      type: Schema.Types.ObjectId,
+      ref: "User",
+    },
     status: {
       type: String,
       enum: ["pending", "in_progress", "completed", "cancelled"],
       default: "pending",
     },
+    budget: {
+      type: Number,
+    },
+    minBidAmount: {
+      type: Number,
+    },
   },
   { timestamps: true },
 );
 
-// Index for efficient queries
-projectSchema.index({ ownerId: 1 });
-projectSchema.index({ status: 1 });
-
 export const Project = model<IProject>("Project", projectSchema);
-

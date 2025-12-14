@@ -43,15 +43,26 @@ const signup = async (payload: TSignup) => {
   const userObj = user.toObject();
   const { password: _, ...userWithoutPassword } = userObj;
 
+  // Create a clean user object for token generation
+  const cleanUser = {
+    id: userWithoutPassword._id,
+    name: userWithoutPassword.name,
+    email: userWithoutPassword.email,
+    role: userWithoutPassword.role,
+    isEmailVerified: userWithoutPassword.isEmailVerified,
+    createdAt: userWithoutPassword.createdAt,
+    updatedAt: userWithoutPassword.updatedAt,
+  };
+
   // Generate tokens
   const accessToken = jwtHelpers.generateToken(
-    userWithoutPassword,
+    cleanUser,
     config.jwt.jwt_secret as Secret,
     config.jwt.expires_in as string,
   );
 
   const refreshToken = jwtHelpers.generateToken(
-    userWithoutPassword,
+    cleanUser,
     config.jwt.refresh_token_secret as Secret,
     config.jwt.refresh_token_expires_in as string,
   );
@@ -59,7 +70,7 @@ const signup = async (payload: TSignup) => {
   return {
     accessToken,
     refreshToken,
-    user: userWithoutPassword,
+    user: cleanUser,
   };
 };
 
@@ -76,16 +87,28 @@ const login = async (payload: TLogin) => {
 
   if (!isPasswordValid) throw new ApiError(401, "Invalid Credentials.");
 
-  const { password: _, ...userWithoutPassword } = user;
+  const userObj = user.toObject();
+  const { password: _, ...userWithoutPassword } = userObj;
+
+  // Create a clean user object for token generation
+  const cleanUser = {
+    id: userWithoutPassword._id,
+    name: userWithoutPassword.name,
+    email: userWithoutPassword.email,
+    role: userWithoutPassword.role,
+    isEmailVerified: userWithoutPassword.isEmailVerified,
+    createdAt: userWithoutPassword.createdAt,
+    updatedAt: userWithoutPassword.updatedAt,
+  };
 
   const accessToken = jwtHelpers.generateToken(
-    userWithoutPassword,
+    cleanUser,
     config.jwt.jwt_secret as Secret,
     config.jwt.expires_in as string,
   );
 
   const refreshToken = jwtHelpers.generateToken(
-    userWithoutPassword,
+    cleanUser,
     config.jwt.refresh_token_secret as Secret,
     config.jwt.refresh_token_expires_in as string,
   );
@@ -93,7 +116,7 @@ const login = async (payload: TLogin) => {
   return {
     accessToken,
     refreshToken,
-    userWithoutPassword,
+    userWithoutPassword: cleanUser,
   };
 };
 

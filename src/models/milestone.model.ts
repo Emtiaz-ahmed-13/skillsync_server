@@ -33,8 +33,4 @@ const milestoneSchema = new Schema<IMilestone>(
   { timestamps: true },
 );
 
-// Index for efficient queries
-milestoneSchema.index({ projectId: 1, order: 1 });
-
 export const Milestone = model<IMilestone>("Milestone", milestoneSchema);
-

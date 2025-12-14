@@ -10,6 +10,7 @@ const express_1 = __importDefault(require("express"));
 const globalErrorHandler_1 = __importDefault(require("./middlewares/globalErrorHandler"));
 // Import routes
 const admin_routes_1 = require("./routes/admin.routes");
+const article_routes_1 = require("./routes/article.routes");
 const auth_routes_1 = require("./routes/auth.routes");
 const file_routes_1 = require("./routes/file.routes");
 const milestone_routes_1 = require("./routes/milestone.routes");
@@ -35,6 +36,7 @@ app.get("/", (_req, res) => {
     });
 });
 // API routes
+app.use("/api/v1/articles", article_routes_1.articleRoutes);
 app.use("/api/v1/auth", auth_routes_1.authRoutes);
 app.use("/api/v1/files", file_routes_1.fileRoutes);
 app.use("/api/v1/profile", profile_routes_1.profileRoutes);
@@ -52,6 +54,7 @@ app.get("/api/v1", (req, res) => {
         success: true,
         message: "API Base Route - Available endpoints listed",
         endpoints: {
+            articles: "/api/v1/articles",
             auth: "/api/v1/auth",
             files: "/api/v1/files",
             profile: "/api/v1/profile",

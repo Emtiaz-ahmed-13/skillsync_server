@@ -1,15 +1,20 @@
 import { IMilestone } from "../interfaces/project.interface";
 import { ActivityLog } from "../models/activityLog.model";
+import { Bid } from "../models/bid.model";
 import { Milestone } from "../models/milestone.model";
 import { Project } from "../models/project.model";
 import { User } from "../models/user.model";
 import ApiError from "../utils/ApiError";
+import { AdminServices } from "./admin.services";
+import { NotificationServices } from "./notification.services";
 
 type CreateProjectPayload = {
   title: string;
   description?: string;
   ownerId: string;
   status?: "pending" | "in_progress" | "completed" | "cancelled";
+  budget?: number;
+  minBidAmount?: number;
 };
 
 type AddMilestonePayload = {
@@ -23,6 +28,8 @@ type UpdateProjectPayload = {
   title?: string;
   description?: string;
   status?: "pending" | "in_progress" | "completed" | "cancelled";
+  budget?: number;
+  minBidAmount?: number;
 };
 
 type UpdateMilestonePayload = {
@@ -33,11 +40,16 @@ type UpdateMilestonePayload = {
   order?: number;
 };
 
+type PlaceBidPayload = {
+  amount: number;
+  proposal: string;
+};
+
 /**
  * Create a new project (ADMIN only)
  */
 const createProject = async (payload: CreateProjectPayload, actorId: string) => {
-  const { title, description, ownerId, status = "pending" } = payload;
+  const { title, description, ownerId, status = "pending", budget, minBidAmount } = payload;
 
   // Verify owner exists
   const owner = await User.findById(ownerId);
@@ -51,6 +63,8 @@ const createProject = async (payload: CreateProjectPayload, actorId: string) => 
     description,
     ownerId,
     status,
+    budget,
+    minBidAmount,
   });
 
   // Create activity log for project creation
@@ -63,6 +77,28 @@ const createProject = async (payload: CreateProjectPayload, actorId: string) => 
       status: project.status,
     },
   });
+
+  // Send notifications to all admins about the new project
+  try {
+    // Get all admins
+    const adminResponse = await AdminServices.getAllUsers(100, 1, "admin");
+    const admins = adminResponse.users;
+
+    // Send notification to each admin
+    for (const admin of admins) {
+      await NotificationServices.createNotification({
+        userId: admin.id.toString(),
+        senderId: actorId,
+        type: "project_created",
+        title: "New Project Created",
+        message: `A new project "${project.title}" has been created by ${owner.name} and is pending approval.`,
+        projectId: project._id.toString(),
+      });
+    }
+  } catch (error) {
+    // Log error but don't fail the project creation
+    console.error("Failed to send admin notifications:", error);
+  }
 
   const projectObj = project.toObject();
   return projectObj;
@@ -78,10 +114,12 @@ const getAllProjects = async (filters: any = {}, limit: number = 10, page: numbe
   const query: any = {};
   if (filters.ownerId) query.ownerId = filters.ownerId;
   if (filters.status) query.status = filters.status;
+  if (filters.assignedFreelancerId) query.assignedFreelancerId = filters.assignedFreelancerId;
 
   // Get projects with pagination
   const projects = await Project.find(query)
     .populate("ownerId", "name email avatar role")
+    .populate("assignedFreelancerId", "name email avatar role")
     .sort({ createdAt: -1 })
     .limit(limit)
     .skip(skip)
@@ -96,7 +134,10 @@ const getAllProjects = async (filters: any = {}, limit: number = 10, page: numbe
       title: project.title,
       description: project.description,
       status: project.status,
+      budget: project.budget,
+      minBidAmount: project.minBidAmount,
       ownerId: project.ownerId,
+      assignedFreelancerId: project.assignedFreelancerId,
       createdAt: project.createdAt,
       updatedAt: project.updatedAt,
     })),
@@ -134,6 +175,7 @@ const searchProjects = async (
   // Get projects with pagination
   const projects = await Project.find(query)
     .populate("ownerId", "name email avatar role")
+    .populate("assignedFreelancerId", "name email avatar role")
     .sort({ createdAt: -1 })
     .limit(limit)
     .skip(skip)
@@ -148,7 +190,10 @@ const searchProjects = async (
       title: project.title,
       description: project.description,
       status: project.status,
+      budget: project.budget,
+      minBidAmount: project.minBidAmount,
       ownerId: project.ownerId,
+      assignedFreelancerId: project.assignedFreelancerId,
       createdAt: project.createdAt,
       updatedAt: project.updatedAt,
     })),
@@ -166,7 +211,9 @@ const searchProjects = async (
  * Get a specific project by ID
  */
 const getProjectById = async (projectId: string) => {
-  const project = await Project.findById(projectId).populate("ownerId", "name email avatar role");
+  const project = await Project.findById(projectId)
+    .populate("ownerId", "name email avatar role")
+    .populate("assignedFreelancerId", "name email avatar role");
 
   if (!project) {
     throw new ApiError(404, "Project not found");
@@ -174,6 +221,11 @@ const getProjectById = async (projectId: string) => {
 
   // Get all milestones for this project, ordered by order field
   const milestones = await Milestone.find({ projectId }).sort({ order: 1, createdAt: 1 }).lean();
+
+  // Get all bids for this project
+  const bids = await Bid.find({ projectId })
+    .populate("freelancerId", "name email avatar role")
+    .lean();
 
   // Convert project to plain object
   const projectObj = project.toObject ? project.toObject() : project;
@@ -184,7 +236,10 @@ const getProjectById = async (projectId: string) => {
       title: projectObj.title,
       description: projectObj.description,
       status: projectObj.status,
+      budget: projectObj.budget,
+      minBidAmount: projectObj.minBidAmount,
       ownerId: projectObj.ownerId,
+      assignedFreelancerId: projectObj.assignedFreelancerId,
       createdAt: projectObj.createdAt,
       updatedAt: projectObj.updatedAt,
     },
@@ -198,6 +253,16 @@ const getProjectById = async (projectId: string) => {
       order: m.order,
       createdAt: m.createdAt,
       updatedAt: m.updatedAt,
+    })),
+    bids: bids.map((b) => ({
+      id: b._id || b.id,
+      projectId: b.projectId,
+      freelancerId: b.freelancerId,
+      amount: b.amount,
+      proposal: b.proposal,
+      status: b.status,
+      createdAt: b.createdAt,
+      updatedAt: b.updatedAt,
     })),
   };
 };
@@ -422,6 +487,9 @@ const deleteProject = async (projectId: string, actorId: string) => {
     throw new ApiError(404, "Project not found");
   }
 
+  // Delete all bids associated with this project
+  await Bid.deleteMany({ projectId });
+
   // Delete all milestones associated with this project
   await Milestone.deleteMany({ projectId });
 
@@ -452,7 +520,9 @@ const deleteProject = async (projectId: string, actorId: string) => {
  * Get project dashboard with consolidated data
  */
 const getDashboard = async (projectId: string) => {
-  const project = await Project.findById(projectId).populate("ownerId", "name email avatar role");
+  const project = await Project.findById(projectId)
+    .populate("ownerId", "name email avatar role")
+    .populate("assignedFreelancerId", "name email avatar role");
 
   if (!project) {
     throw new ApiError(404, "Project not found");
@@ -466,6 +536,11 @@ const getDashboard = async (projectId: string) => {
     .populate("actorId", "name email avatar")
     .sort({ createdAt: -1 })
     .limit(10)
+    .lean();
+
+  // Get all bids for this project
+  const bids = await Bid.find({ projectId })
+    .populate("freelancerId", "name email avatar role")
     .lean();
 
   // Calculate stats
@@ -482,10 +557,15 @@ const getDashboard = async (projectId: string) => {
       title: projectObj.title,
       description: projectObj.description,
       status: projectObj.status,
+      budget: projectObj.budget,
+      minBidAmount: projectObj.minBidAmount,
+      ownerId: projectObj.ownerId,
+      assignedFreelancerId: projectObj.assignedFreelancerId,
       createdAt: projectObj.createdAt,
       updatedAt: projectObj.updatedAt,
     },
     owner: projectObj.ownerId,
+    assignedFreelancer: projectObj.assignedFreelancerId,
     milestones: milestones.map((m) => ({
       id: m._id || m.id,
       projectId: m.projectId,
@@ -496,6 +576,16 @@ const getDashboard = async (projectId: string) => {
       order: m.order,
       createdAt: m.createdAt,
       updatedAt: m.updatedAt,
+    })),
+    bids: bids.map((b) => ({
+      id: b._id || b.id,
+      projectId: b.projectId,
+      freelancerId: b.freelancerId,
+      amount: b.amount,
+      proposal: b.proposal,
+      status: b.status,
+      createdAt: b.createdAt,
+      updatedAt: b.updatedAt,
     })),
     recentActivities: recentActivities.map((a) => ({
       id: a._id || a.id,
@@ -509,6 +599,7 @@ const getDashboard = async (projectId: string) => {
       completionRate: Math.round(completionRate * 100) / 100, // Round to 2 decimal places
       totalMilestones,
       completedMilestones,
+      totalBids: bids.length,
     },
   };
 };
@@ -622,6 +713,251 @@ const addMilestone = async (projectId: string, payload: AddMilestonePayload, act
   return milestoneObj;
 };
 
+/**
+ * Place a bid on a project
+ */
+const placeBid = async (projectId: string, payload: PlaceBidPayload, freelancerId: string) => {
+  const { amount, proposal } = payload;
+
+  // Verify project exists
+  const project = await Project.findById(projectId);
+  if (!project) {
+    throw new ApiError(404, "Project not found");
+  }
+
+  // Check if project is accepting bids
+  if (project.status !== "pending") {
+    throw new ApiError(400, "Project is not accepting bids");
+  }
+
+  // Check if freelancer has already placed a bid
+  const existingBid = await Bid.findOne({ projectId, freelancerId });
+  if (existingBid) {
+    throw new ApiError(400, "You have already placed a bid on this project");
+  }
+
+  // Check if bid meets minimum requirement
+  if (project.minBidAmount && amount < project.minBidAmount) {
+    throw new ApiError(400, `Bid amount must be at least ${project.minBidAmount}`);
+  }
+
+  // Create bid
+  const bid = await Bid.create({
+    projectId,
+    freelancerId,
+    amount,
+    proposal,
+  });
+
+  // Create activity log
+  await ActivityLog.create({
+    projectId,
+    actorId: freelancerId,
+    type: "bid_placed",
+    payload: {
+      bidId: bid._id,
+      amount: bid.amount,
+    },
+  });
+
+  const bidObj = bid.toObject();
+  return bidObj;
+};
+
+/**
+ * Get all bids for a project
+ */
+const getProjectBids = async (projectId: string) => {
+  // Verify project exists
+  const project = await Project.findById(projectId);
+  if (!project) {
+    throw new ApiError(404, "Project not found");
+  }
+
+  // Get all bids for this project
+  const bids = await Bid.find({ projectId })
+    .populate("freelancerId", "name email avatar role")
+    .lean();
+
+  return bids.map((b) => ({
+    id: b._id || b.id,
+    projectId: b.projectId,
+    freelancerId: b.freelancerId,
+    amount: b.amount,
+    proposal: b.proposal,
+    status: b.status,
+    createdAt: b.createdAt,
+    updatedAt: b.updatedAt,
+  }));
+};
+
+/**
+ * Accept a bid and assign freelancer to project
+ */
+const acceptBid = async (projectId: string, bidId: string, ownerId: string) => {
+  // Verify project exists and user is the owner
+  const project = await Project.findById(projectId);
+  if (!project) {
+    throw new ApiError(404, "Project not found");
+  }
+
+  if (project.ownerId.toString() !== ownerId) {
+    throw new ApiError(403, "Only project owner can accept bids");
+  }
+
+  // Verify bid exists
+  const bid = await Bid.findById(bidId).populate("freelancerId");
+  if (!bid) {
+    throw new ApiError(404, "Bid not found");
+  }
+
+  if (bid.projectId.toString() !== projectId) {
+    throw new ApiError(400, "Bid does not belong to this project");
+  }
+
+  // Update bid status to accepted
+  bid.status = "accepted";
+  await bid.save();
+
+  // Reject all other bids for this project
+  await Bid.updateMany({ projectId, _id: { $ne: bidId } }, { status: "rejected" });
+
+  // Assign freelancer to project
+  project.assignedFreelancerId = bid.freelancerId._id;
+  project.status = "in_progress";
+  await project.save();
+
+  // Create activity logs
+  await ActivityLog.create({
+    projectId,
+    actorId: ownerId,
+    type: "bid_accepted",
+    payload: {
+      bidId: bid._id,
+      freelancerId: bid.freelancerId._id,
+      amount: bid.amount,
+    },
+  });
+
+  await ActivityLog.create({
+    projectId,
+    actorId: ownerId,
+    type: "freelancer_assigned",
+    payload: {
+      freelancerId: bid.freelancerId._id,
+      freelancerName: (bid.freelancerId as any).name,
+    },
+  });
+
+  return {
+    message: "Bid accepted and freelancer assigned to project",
+    project: project.toObject(),
+    bid: bid.toObject(),
+  };
+};
+
+/**
+ * Get freelancer's bids
+ */
+const getFreelancerBids = async (freelancerId: string) => {
+  const bids = await Bid.find({ freelancerId })
+    .populate("projectId", "title description status")
+    .lean();
+
+  return bids.map((b) => ({
+    id: b._id || b.id,
+    projectId: b.projectId,
+    freelancerId: b.freelancerId,
+    amount: b.amount,
+    proposal: b.proposal,
+    status: b.status,
+    createdAt: b.createdAt,
+    updatedAt: b.updatedAt,
+  }));
+};
+
+/**
+ * Complete a milestone
+ */
+const completeMilestone = async (milestoneId: string, actorId: string) => {
+  // Verify milestone exists
+  const milestone = await Milestone.findById(milestoneId);
+  if (!milestone) {
+    throw new ApiError(404, "Milestone not found");
+  }
+
+  // Update milestone to completed
+  milestone.completed = true;
+  const updatedMilestone = await milestone.save();
+
+  // Create activity log for milestone completion
+  await ActivityLog.create({
+    projectId: updatedMilestone.projectId,
+    actorId,
+    type: "milestone_completed",
+    payload: {
+      milestoneId: updatedMilestone._id,
+      title: updatedMilestone.title,
+    },
+  });
+
+  const milestoneObj = updatedMilestone.toObject();
+  return milestoneObj;
+};
+
+/**
+ * Approve a project (change status from pending to in_progress)
+ */
+const approveProject = async (projectId: string, actorId: string) => {
+  // Verify project exists
+  const project = await Project.findById(projectId);
+  if (!project) {
+    throw new ApiError(404, "Project not found");
+  }
+
+  // Check if project is in pending status
+  if (project.status !== "pending") {
+    throw new ApiError(400, "Project is not in pending status");
+  }
+
+  // Update project status to in_progress
+  project.status = "in_progress";
+  const updatedProject = await project.save();
+
+  // Create activity log for project approval
+  await ActivityLog.create({
+    projectId: updatedProject._id,
+    actorId,
+    type: "project_status_changed",
+    payload: {
+      title: updatedProject.title,
+      oldStatus: "pending",
+      newStatus: "in_progress",
+    },
+  });
+
+  // Send notification to project owner about approval
+  try {
+    const owner = await User.findById(project.ownerId);
+    if (owner) {
+      await NotificationServices.createNotification({
+        userId: owner._id.toString(),
+        senderId: actorId,
+        type: "project_updated",
+        title: "Project Approved",
+        message: `Your project "${project.title}" has been approved and is now in progress.`,
+        projectId: project._id.toString(),
+      });
+    }
+  } catch (error) {
+    // Log error but don't fail the project approval
+    console.error("Failed to send owner notification:", error);
+  }
+
+  const projectObj = updatedProject.toObject();
+  return projectObj;
+};
+
 export const ProjectServices = {
   createProject,
   getAllProjects,
@@ -637,4 +973,10 @@ export const ProjectServices = {
   deleteProject,
   getDashboard,
   addMilestone,
+  placeBid,
+  getProjectBids,
+  acceptBid,
+  getFreelancerBids,
+  completeMilestone,
+  approveProject,
 };

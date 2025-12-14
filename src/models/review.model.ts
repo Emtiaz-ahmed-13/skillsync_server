@@ -60,10 +60,4 @@ const reviewSchema = new Schema<IReview>(
 // Ensure a user can only review another user once per project
 reviewSchema.index({ projectId: 1, reviewerId: 1, revieweeId: 1 }, { unique: true });
 
-// Index for efficient queries
-reviewSchema.index({ projectId: 1 });
-reviewSchema.index({ reviewerId: 1 });
-reviewSchema.index({ revieweeId: 1 });
-reviewSchema.index({ rating: 1 });
-
 export const Review = model<IReview>("Review", reviewSchema);

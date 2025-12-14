@@ -59,10 +59,4 @@ const articleSchema = new Schema<IArticle>(
   },
 );
 
-// Index for better query performance
-articleSchema.index({ status: 1 });
-articleSchema.index({ author: 1 });
-articleSchema.index({ tags: 1 });
-articleSchema.index({ createdAt: -1 });
-
 export const Article = model<IArticle>("Article", articleSchema);

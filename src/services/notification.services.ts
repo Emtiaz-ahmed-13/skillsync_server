@@ -16,82 +16,57 @@ type CreateNotificationPayload = {
   metadata?: Record<string, any>;
 };
 
-const createNotification = async (payload: CreateNotificationPayload) => {
-  // Verify user exists
-  const user = await User.findById(payload.userId);
-  if (!user) {
-    throw new ApiError(404, "User not found");
-  }
+const populateFields = [
+  { path: "userId", select: "name email avatar" },
+  { path: "senderId", select: "name email avatar" },
+  { path: "projectId", select: "title" },
+  { path: "taskId", select: "title" },
+  { path: "milestoneId", select: "title" },
+];
 
-  // Verify sender exists (if provided)
+const createNotification = async (payload: CreateNotificationPayload) => {
+  const user = await User.findById(payload.userId);
+  if (!user) throw new ApiError(404, "User not found");
+
   if (payload.senderId) {
     const sender = await User.findById(payload.senderId);
-    if (!sender) {
-      throw new ApiError(404, "Sender not found");
-    }
+    if (!sender) throw new ApiError(404, "Sender not found");
   }
 
-  const notification = await Notification.create(payload);
-
-  const notificationObj = notification.toObject();
-  return notificationObj;
+  return (await Notification.create(payload)).toObject();
 };
 
 const getNotificationById = async (notificationId: string) => {
-  const notification = await Notification.findById(notificationId)
-    .populate("userId", "name email avatar")
-    .populate("senderId", "name email avatar")
-    .populate("projectId", "title")
-    .populate("taskId", "title")
-    .populate("milestoneId", "title");
+  const notification = await Notification.findById(notificationId).populate(populateFields);
 
-  if (!notification) {
-    throw new ApiError(404, "Notification not found");
-  }
+  if (!notification) throw new ApiError(404, "Notification not found");
 
-  const notificationObj = notification.toObject();
-  return notificationObj;
+  return notification.toObject();
 };
 
-const getUserNotifications = async (userId: string, limit: number = 10, page: number = 1) => {
+const getUserNotifications = async (userId: string, limit = 10, page = 1) => {
   const skip = (page - 1) * limit;
 
   const notifications = await Notification.find({ userId })
-    .populate("senderId", "name email avatar")
-    .populate("projectId", "title")
-    .populate("taskId", "title")
-    .populate("milestoneId", "title")
+    .populate(populateFields.slice(1)) // skip userId populate
     .sort({ createdAt: -1 })
     .limit(limit)
     .skip(skip)
     .lean();
 
   const total = await Notification.countDocuments({ userId });
+  const totalPages = Math.ceil(total / limit);
 
   return {
-    notifications: notifications.map((notification) => ({
-      id: notification._id || notification.id,
-      userId: notification.userId,
-      senderId: notification.senderId,
-      type: notification.type,
-      title: notification.title,
-      message: notification.message,
-      projectId: notification.projectId,
-      taskId: notification.taskId,
-      milestoneId: notification.milestoneId,
-      fileId: notification.fileId,
-      reviewId: notification.reviewId,
-      isRead: notification.isRead,
-      readAt: notification.readAt,
-      metadata: notification.metadata,
-      createdAt: notification.createdAt,
-      updatedAt: notification.updatedAt,
+    notifications: notifications.map((n) => ({
+      id: n._id,
+      ...n,
     })),
     pagination: {
       currentPage: page,
-      totalPages: Math.ceil(total / limit),
+      totalPages,
       totalNotifications: total,
-      hasNextPage: page < Math.ceil(total / limit),
+      hasNextPage: page < totalPages,
       hasPrevPage: page > 1,
     },
   };
@@ -100,32 +75,21 @@ const getUserNotifications = async (userId: string, limit: number = 10, page: nu
 const markNotificationAsRead = async (notificationId: string, userId: string) => {
   const notification = await Notification.findOneAndUpdate(
     { _id: notificationId, userId },
-    {
-      $set: {
-        isRead: true,
-        readAt: new Date(),
-      },
-    },
+    { $set: { isRead: true, readAt: new Date() } },
     { new: true },
   );
 
   if (!notification) {
-    throw new ApiError(404, "Notification not found or you don't have permission to update it");
+    throw new ApiError(404, "Notification not found or permission denied");
   }
 
-  const notificationObj = notification.toObject();
-  return notificationObj;
+  return notification.toObject();
 };
 
 const markAllNotificationsAsRead = async (userId: string) => {
   const result = await Notification.updateMany(
     { userId, isRead: false },
-    {
-      $set: {
-        isRead: true,
-        readAt: new Date(),
-      },
-    },
+    { $set: { isRead: true, readAt: new Date() } },
   );
 
   return {
@@ -135,25 +99,18 @@ const markAllNotificationsAsRead = async (userId: string) => {
 };
 
 const deleteNotification = async (notificationId: string, userId: string) => {
-  const notification = await Notification.findOneAndDelete({
-    _id: notificationId,
-    userId,
-  });
+  const notification = await Notification.findOneAndDelete({ _id: notificationId, userId });
 
   if (!notification) {
-    throw new ApiError(404, "Notification not found or you don't have permission to delete it");
+    throw new ApiError(404, "Notification not found or permission denied");
   }
 
   return { message: "Notification deleted successfully" };
 };
 
 const getUnreadNotificationsCount = async (userId: string) => {
-  const count = await Notification.countDocuments({
-    userId,
-    isRead: false,
-  });
-
-  return { unreadCount: count };
+  const unreadCount = await Notification.countDocuments({ userId, isRead: false });
+  return { unreadCount };
 };
 
 export const NotificationServices = {

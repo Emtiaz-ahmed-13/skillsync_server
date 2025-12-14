@@ -73,11 +73,4 @@ const notificationSchema = new Schema<INotification>(
   { timestamps: true },
 );
 
-// Index for efficient queries
-notificationSchema.index({ userId: 1 });
-notificationSchema.index({ isRead: 1 });
-notificationSchema.index({ type: 1 });
-notificationSchema.index({ projectId: 1 });
-notificationSchema.index({ createdAt: -1 });
-
 export const Notification = model<INotification>("Notification", notificationSchema);

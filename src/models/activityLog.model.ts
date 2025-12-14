@@ -1,5 +1,5 @@
 import { Schema, model } from "mongoose";
-import { IActivityLog, ActivityType } from "../interfaces/project.interface";
+import { IActivityLog } from "../interfaces/project.interface";
 
 const activityLogSchema = new Schema<IActivityLog>(
   {
@@ -15,7 +15,16 @@ const activityLogSchema = new Schema<IActivityLog>(
     },
     type: {
       type: String,
-      enum: ["milestone_created", "milestone_completed", "project_created", "project_updated", "project_status_changed"],
+      enum: [
+        "milestone_created",
+        "milestone_completed",
+        "project_created",
+        "project_updated",
+        "project_status_changed",
+        "bid_placed",
+        "bid_accepted",
+        "freelancer_assigned",
+      ],
       required: true,
     },
     payload: {
@@ -26,8 +35,4 @@ const activityLogSchema = new Schema<IActivityLog>(
   { timestamps: { createdAt: true, updatedAt: false } },
 );
 
-// Index for efficient queries
-activityLogSchema.index({ projectId: 1, createdAt: -1 });
-
 export const ActivityLog = model<IActivityLog>("ActivityLog", activityLogSchema);
-

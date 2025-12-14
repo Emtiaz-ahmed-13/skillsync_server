@@ -55,11 +55,4 @@ const taskSchema = new Schema<ITask>(
   { timestamps: true },
 );
 
-// Index for efficient queries
-taskSchema.index({ projectId: 1 });
-taskSchema.index({ milestoneId: 1 });
-taskSchema.index({ assignedTo: 1 });
-taskSchema.index({ status: 1 });
-taskSchema.index({ createdBy: 1 });
-
 export const Task = model<ITask>("Task", taskSchema);

@@ -46,9 +46,4 @@ const fileSchema = new Schema<IFile>(
   { timestamps: true },
 );
 
-// Index for efficient queries
-fileSchema.index({ projectId: 1 });
-fileSchema.index({ milestoneId: 1 });
-fileSchema.index({ uploadedBy: 1 });
-
 export const File = model<IFile>("File", fileSchema);

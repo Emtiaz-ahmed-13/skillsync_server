@@ -102,13 +102,19 @@ Service: Handles data processing and external API integrations.
 
 ### Project Endpoints
 
-- `POST /api/v1/projects` - Create a new project
-- `GET /api/v1/projects` - Get all projects (with filtering)
+- `POST /api/v1/projects` - Create a new project (ADMIN only)
+- `GET /api/v1/projects` - Get all projects
+- `GET /api/v1/projects/search` - Search projects by title or description
 - `GET /api/v1/projects/:id` - Get specific project
+- `GET /api/v1/projects/:id/dashboard` - Get project dashboard
 - `PUT /api/v1/projects/:id` - Update project
+- `PUT /api/v1/projects/:id/approve` - Approve project (ADMIN only)
 - `DELETE /api/v1/projects/:id` - Delete project
-- `POST /api/v1/projects/:id/invite` - Invite user to project
-- `POST /api/v1/projects/:id/accept-invite` - Accept project invitation
+- `POST /api/v1/projects/:id/milestones` - Add milestone to project
+- `POST /api/v1/projects/:id/bids` - Place a bid on a project (Freelancer only)
+- `GET /api/v1/projects/:id/bids` - Get all bids for a project
+- `PUT /api/v1/projects/:id/bids/:bidId` - Accept a bid and assign freelancer to project (Owner only)
+- `GET /api/v1/projects/my-bids` - Get freelancer's bids
 
 ### Milestone Endpoints
 
@@ -116,8 +122,8 @@ Service: Handles data processing and external API integrations.
 - `GET /api/v1/milestones/project/:projectId` - Get all milestones for a project
 - `GET /api/v1/milestones/:id` - Get specific milestone
 - `PUT /api/v1/milestones/:id` - Update milestone
-- `DELETE /api/v1/milestones/:id` - Delete milestone
 - `PUT /api/v1/milestones/:id/complete` - Mark milestone as complete
+- `DELETE /api/v1/milestones/:id` - Delete milestone
 
 ### Task Endpoints
 

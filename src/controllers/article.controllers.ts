@@ -10,11 +10,22 @@ interface CustomRequest extends Request {
     role?: string;
     iat?: number;
     exp?: number;
+    _doc?: {
+      _id?: string;
+    };
+    $__?: {
+      activePaths?: {
+        paths?: {
+          _id?: boolean;
+        };
+      };
+    };
   };
 }
 
 const createArticle = catchAsync(async (req: CustomRequest, res: Response) => {
-  const userId = req.user?.id || req.user?._id;
+  // Handle different JWT token structures
+  const userId = req.user?.id || req.user?._id || req.user?._doc?._id;
 
   if (!userId) {
     return sendResponse(res, {
@@ -66,7 +77,8 @@ const getArticleBySlug = catchAsync(async (req: CustomRequest, res: Response) =>
 });
 
 const updateArticle = catchAsync(async (req: CustomRequest, res: Response) => {
-  const userId = req.user?.id || req.user?._id;
+  // Handle different JWT token structures
+  const userId = req.user?.id || req.user?._id || req.user?._doc?._id;
   const { id } = req.params;
 
   if (!userId) {
@@ -89,7 +101,8 @@ const updateArticle = catchAsync(async (req: CustomRequest, res: Response) => {
 });
 
 const deleteArticle = catchAsync(async (req: CustomRequest, res: Response) => {
-  const userId = req.user?.id || req.user?._id;
+  // Handle different JWT token structures
+  const userId = req.user?.id || req.user?._id || req.user?._doc?._id;
   const { id } = req.params;
 
   if (!userId) {
@@ -112,7 +125,8 @@ const deleteArticle = catchAsync(async (req: CustomRequest, res: Response) => {
 });
 
 const approveArticle = catchAsync(async (req: CustomRequest, res: Response) => {
-  const userId = req.user?.id || req.user?._id;
+  // Handle different JWT token structures
+  const userId = req.user?.id || req.user?._id || req.user?._doc?._id;
   const { id } = req.params;
   const { status } = req.body;
 
