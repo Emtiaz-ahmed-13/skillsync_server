@@ -1,5 +1,5 @@
 import { Schema, model } from "mongoose";
-import { IBid } from "../interfaces/project.interface";
+import { IBid } from "../interfaces/bid.interface";
 
 const bidSchema = new Schema<IBid>(
   {
@@ -31,9 +31,5 @@ const bidSchema = new Schema<IBid>(
   },
   { timestamps: true },
 );
-
-// Index for efficient querying
-bidSchema.index({ projectId: 1, freelancerId: 1 });
-bidSchema.index({ projectId: 1, amount: 1 });
 
 export const Bid = model<IBid>("Bid", bidSchema);

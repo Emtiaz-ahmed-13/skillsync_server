@@ -2,3 +2,15 @@ dist
 node_modules
 .env
 .DS_Store
+npm-debug.log*
+coverage/
+.nyc_output/
+*.log
+uploads/
+*.env.local
+*.env.development.local
+*.env.test.local
+*.env.production.local
+__snapshots__/
+node/
+Thumbs.db

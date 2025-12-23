@@ -3,6 +3,15 @@ import { ITask } from "../interfaces/task.interface";
 
 const taskSchema = new Schema<ITask>(
   {
+    projectId: {
+      type: Schema.Types.ObjectId,
+      ref: "Project",
+      required: true,
+    },
+    sprintId: {
+      type: Schema.Types.ObjectId,
+      ref: "Sprint",
+    },
     title: {
       type: String,
       required: true,
@@ -12,45 +21,29 @@ const taskSchema = new Schema<ITask>(
       type: String,
       trim: true,
     },
-    projectId: {
-      type: Schema.Types.ObjectId,
-      ref: "Project",
-      required: true,
-    },
-    milestoneId: {
-      type: Schema.Types.ObjectId,
-      ref: "Milestone",
-    },
     assignedTo: {
       type: Schema.Types.ObjectId,
       ref: "User",
     },
-    createdBy: {
-      type: Schema.Types.ObjectId,
-      ref: "User",
-      required: true,
-    },
     status: {
       type: String,
-      enum: ["todo", "in_progress", "review", "completed", "cancelled"],
+      enum: ["todo", "in-progress", "review", "completed"],
       default: "todo",
     },
     priority: {
       type: String,
       enum: ["low", "medium", "high"],
-    },
-    dueDate: {
-      type: Date,
+      default: "medium",
     },
     estimatedHours: {
       type: Number,
     },
-    loggedHours: {
+    actualHours: {
       type: Number,
-      default: 0,
     },
-    tags: [String],
-    attachments: [String],
+    dueDate: {
+      type: Date,
+    },
   },
   { timestamps: true },
 );

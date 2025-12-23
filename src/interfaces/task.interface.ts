@@ -1,23 +1,18 @@
 import { Types } from "mongoose";
 
-export type TaskStatus = "todo" | "in_progress" | "review" | "completed" | "cancelled";
-
 export interface ITask {
   _id?: Types.ObjectId;
   id?: string;
+  projectId: Types.ObjectId;
+  sprintId?: Types.ObjectId;
   title: string;
   description?: string;
-  projectId: Types.ObjectId;
-  milestoneId?: Types.ObjectId;
   assignedTo?: Types.ObjectId;
-  createdBy: Types.ObjectId;
-  status: TaskStatus;
-  priority?: "low" | "medium" | "high";
-  dueDate?: Date;
+  status: "todo" | "in-progress" | "review" | "completed";
+  priority: "low" | "medium" | "high";
   estimatedHours?: number;
-  loggedHours?: number;
-  tags?: string[];
-  attachments?: string[];
+  actualHours?: number;
+  dueDate?: Date;
   createdAt?: Date;
   updatedAt?: Date;
 }

@@ -10,30 +10,45 @@ const projectSchema = new Schema<IProject>(
     },
     description: {
       type: String,
-      trim: true,
-    },
-    ownerId: {
-      type: Schema.Types.ObjectId,
-      ref: "User",
       required: true,
     },
-    assignedFreelancerId: {
-      type: Schema.Types.ObjectId,
-      ref: "User",
-    },
-    status: {
-      type: String,
-      enum: ["pending", "in_progress", "completed", "cancelled"],
-      default: "pending",
+    minimumBid: {
+      type: Number,
+      required: true,
     },
     budget: {
       type: Number,
+      required: true,
     },
-    minBidAmount: {
-      type: Number,
+    technology: [
+      {
+        type: String,
+        required: true,
+      },
+    ],
+    picture: {
+      type: String,
+    },
+    status: {
+      type: String,
+      enum: ["pending", "approved", "rejected"],
+      default: "pending",
+    },
+    ownerId: {
+      type: String,
+      required: true,
     },
   },
-  { timestamps: true },
+  {
+    timestamps: true,
+    toJSON: { virtuals: true },
+    toObject: { virtuals: true },
+  },
 );
+
+// Add virtual field for id
+projectSchema.virtual("id").get(function () {
+  return this._id.toHexString();
+});
 
 export const Project = model<IProject>("Project", projectSchema);

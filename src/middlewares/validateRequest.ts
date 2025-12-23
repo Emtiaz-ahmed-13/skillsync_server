@@ -6,12 +6,24 @@ import ApiError from "../utils/ApiError";
 const validateRequest =
   (schema: ZodSchema) => async (req: Request, res: Response, next: NextFunction) => {
     try {
-      const safeParseResult = schema.safeParse({ body: req.body });
-      if (safeParseResult.success) {
-        const result = safeParseResult.data as { body: any };
-        req.body = result.body;
+      // For params validation, validate directly against req.params
+      if ((schema as any).shape && (schema as any).shape.params) {
+        const safeParseResult = schema.safeParse({ params: req.params });
+        if (!safeParseResult.success) {
+          throw safeParseResult.error;
+        }
+        // Update req.params with validated data if needed
+        req.params = safeParseResult.data.params;
       } else {
-        await schema.parseAsync(req.body);
+        // For body validation, wrap the request body in an object with a body property for validation
+        const safeParseResult = schema.safeParse({ body: req.body });
+        if (safeParseResult.success) {
+          // If validation passes, extract the body property to req.body
+          req.body = (safeParseResult.data as { body: any }).body;
+        } else {
+          // If validation fails, throw the error
+          throw safeParseResult.error;
+        }
       }
       return next();
     } catch (error) {

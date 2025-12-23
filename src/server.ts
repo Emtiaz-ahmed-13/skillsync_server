@@ -3,6 +3,9 @@ import { Server } from "http";
 import app from "./app";
 import config from "./config";
 import connectDB from "./config/database";
+import dotenv from "dotenv";
+
+dotenv.config();
 
 async function main() {
   await connectDB();

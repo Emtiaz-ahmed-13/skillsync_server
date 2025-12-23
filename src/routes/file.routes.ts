@@ -1,13 +1,12 @@
 import express from "express";
 import { FileControllers } from "../controllers/file.controllers";
 import auth from "../middlewares/auth";
-import validateRequest from "../middlewares/validateRequest";
-import { createFileSchema } from "../validations/file.validation";
+import { uploadSingle } from "../middlewares/upload.middleware";
 
 const router = express.Router();
 
 // POST /files - Upload a new file
-router.post("/", auth(), validateRequest(createFileSchema), FileControllers.createFile);
+router.post("/", auth(), uploadSingle, FileControllers.createFile);
 
 // GET /files/:id - Get specific file
 router.get("/:id", FileControllers.getFileById);

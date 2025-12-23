@@ -3,17 +3,31 @@ import ImageKit from "imagekit";
 
 dotenv.config();
 
-// Initialize ImageKit
-const imagekit = new ImageKit({
-  publicKey: process.env.IMAGEKIT_PUBLIC_KEY || "",
-  privateKey: process.env.IMAGEKIT_PRIVATE_KEY || "",
-  urlEndpoint: process.env.IMAGEKIT_URL_ENDPOINT || "",
-});
+// Initialize ImageKit only if all required environment variables are present
+let imagekit: ImageKit | null = null;
+
+if (
+  process.env.IMAGEKIT_PUBLIC_KEY &&
+  process.env.IMAGEKIT_PRIVATE_KEY &&
+  process.env.IMAGEKIT_URL_ENDPOINT
+) {
+  imagekit = new ImageKit({
+    publicKey: process.env.IMAGEKIT_PUBLIC_KEY,
+    privateKey: process.env.IMAGEKIT_PRIVATE_KEY,
+    urlEndpoint: process.env.IMAGEKIT_URL_ENDPOINT,
+  });
+} else {
+  console.warn("ImageKit configuration missing. File uploads will be stored locally.");
+}
 
 /**
  * Upload file to ImageKit
  */
 const uploadFile = async (fileBuffer: Buffer, fileName: string, folderPath: string = "/") => {
+  if (!imagekit) {
+    throw new Error("ImageKit not configured");
+  }
+
   try {
     const response = await imagekit.upload({
       file: fileBuffer,
@@ -38,6 +52,10 @@ const uploadFile = async (fileBuffer: Buffer, fileName: string, folderPath: stri
  * Delete file from ImageKit
  */
 const deleteFile = async (fileId: string) => {
+  if (!imagekit) {
+    throw new Error("ImageKit not configured");
+  }
+
   try {
     await imagekit.deleteFile(fileId);
     return { success: true, message: "File deleted successfully" };
@@ -50,6 +68,10 @@ const deleteFile = async (fileId: string) => {
  * Get file metadata from ImageKit
  */
 const getFileMetadata = async (fileId: string) => {
+  if (!imagekit) {
+    throw new Error("ImageKit not configured");
+  }
+
   try {
     const response = await imagekit.getFileDetails(fileId);
     return response;
@@ -62,6 +84,10 @@ const getFileMetadata = async (fileId: string) => {
  * Generate signed URL for private files
  */
 const generateSignedUrl = async (path: string, expiresIn: number = 3600) => {
+  if (!imagekit) {
+    throw new Error("ImageKit not configured");
+  }
+
   try {
     const response = await imagekit.getAuthenticationParameters(path, expiresIn);
     return response;
