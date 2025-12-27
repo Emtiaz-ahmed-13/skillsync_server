@@ -3,9 +3,16 @@ import { ProjectServices } from "../services/project.services";
 import catchAsync from "../utils/catchAsync";
 import sendResponse from "../utils/sendResponse";
 
-const createProject = catchAsync(async (req: Request, res: Response) => {
+const createProject = catchAsync(async (req: Request & { user?: any }, res: Response) => {
   const projectData = req.body;
-  const result = await ProjectServices.createProject(projectData);
+
+  // Add ownerId from authenticated user
+  const projectDataWithOwner = {
+    ...projectData,
+    ownerId: req.user?.id || req.user?._id,
+  };
+
+  const result = await ProjectServices.createProject(projectDataWithOwner);
 
   sendResponse(res, {
     statusCode: 201,
@@ -51,9 +58,34 @@ const getProjectById = catchAsync(async (req: Request, res: Response) => {
   });
 });
 
-const updateProject = catchAsync(async (req: Request, res: Response) => {
+const updateProject = catchAsync(async (req: Request & { user?: any }, res: Response) => {
   const { id } = req.params;
   const updateData = req.body;
+
+  // Check if user is authorized to update this project
+  const currentProject = await ProjectServices.getProjectById(id);
+  if (!currentProject) {
+    return sendResponse(res, {
+      statusCode: 404,
+      success: false,
+      message: "Project not found",
+      data: null,
+    });
+  }
+
+  const userId = req.user?.id || req.user?._id;
+  const userRole = req.user?.role;
+
+  // Only project owner or admin can update the project
+  if (currentProject.ownerId !== userId && userRole !== "admin") {
+    return sendResponse(res, {
+      statusCode: 403,
+      success: false,
+      message: "You are not authorized to update this project",
+      data: null,
+    });
+  }
+
   const result = await ProjectServices.updateProject(id, updateData);
 
   if (!result) {
@@ -73,8 +105,33 @@ const updateProject = catchAsync(async (req: Request, res: Response) => {
   });
 });
 
-const deleteProject = catchAsync(async (req: Request, res: Response) => {
+const deleteProject = catchAsync(async (req: Request & { user?: any }, res: Response) => {
   const { id } = req.params;
+
+  // Check if user is authorized to delete this project
+  const currentProject = await ProjectServices.getProjectById(id);
+  if (!currentProject) {
+    return sendResponse(res, {
+      statusCode: 404,
+      success: false,
+      message: "Project not found",
+      data: null,
+    });
+  }
+
+  const userId = req.user?.id || req.user?._id;
+  const userRole = req.user?.role;
+
+  // Only project owner or admin can delete the project
+  if (currentProject.ownerId !== userId && userRole !== "admin") {
+    return sendResponse(res, {
+      statusCode: 403,
+      success: false,
+      message: "You are not authorized to delete this project",
+      data: null,
+    });
+  }
+
   const result = await ProjectServices.deleteProject(id);
 
   if (!result) {

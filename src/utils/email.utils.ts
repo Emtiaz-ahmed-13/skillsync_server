@@ -2,8 +2,6 @@ import dotenv from "dotenv";
 import nodemailer from "nodemailer";
 
 dotenv.config();
-
-// Create transporter
 const transporter = nodemailer.createTransporter({
   host: process.env.SMTP_HOST || "smtp.gmail.com",
   port: parseInt(process.env.SMTP_PORT || "587"),
@@ -99,9 +97,6 @@ const sendPaymentConfirmationEmail = async (
   return await sendEmail(to, subject, html);
 };
 
-/**
- * Send milestone completion notification
- */
 const sendMilestoneCompletionEmail = async (
   to: string,
   milestoneTitle: string,

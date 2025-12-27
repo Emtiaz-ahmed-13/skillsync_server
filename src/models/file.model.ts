@@ -27,7 +27,7 @@ const fileSchema = new Schema<IFile>(
     projectId: {
       type: Schema.Types.ObjectId,
       ref: "Project",
-      required: true,
+      required: false,
     },
     milestoneId: {
       type: Schema.Types.ObjectId,

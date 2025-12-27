@@ -1,5 +1,5 @@
 import { Schema, model } from "mongoose";
-import { IMilestone } from "../interfaces/project.interface";
+import { IMilestone } from "../interfaces/milestone.interface";
 
 const milestoneSchema = new Schema<IMilestone>(
   {

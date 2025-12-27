@@ -1,5 +1,5 @@
 import { Schema, model } from "mongoose";
-import { IActivityLog } from "../interfaces/project.interface";
+import { IActivityLog } from "../interfaces/activityLog.interface";
 
 const activityLogSchema = new Schema<IActivityLog>(
   {

@@ -23,10 +23,10 @@ const analyzeProjectAndGenerateTasks = async (
   try {
     // Get project files
     const files = await File.find({ projectId });
-    
+
     // Build context for AI
     let projectContext = `Project Name: ${projectName}\nProject Description: ${projectDescription}\n\n`;
-    
+
     // Add file information to context
     if (files.length > 0) {
       projectContext += "Project Files:\n";
@@ -37,7 +37,7 @@ const analyzeProjectAndGenerateTasks = async (
       }
       projectContext += "\n";
     }
-    
+
     // AI prompt to generate sprint and task structure
     const prompt = `
     Based on the following project information, create a detailed sprint and task breakdown.
@@ -88,23 +88,24 @@ const analyzeProjectAndGenerateTasks = async (
       messages: [
         {
           role: "user",
-          content: prompt
-        }
+          content: prompt,
+        },
       ],
       maxTokens: 2000,
-      temperature: 0.3
+      temperature: 0.3,
     });
 
     // Extract the AI response
     const aiResponse = response.choices[0]?.message?.content || "";
-    
+
     // Try to parse the JSON from the AI response
     let parsedResponse;
     try {
       // Extract JSON from the response text
-      const jsonStart = aiResponse.indexOf('{');
-      const jsonEnd = aiResponse.lastIndexOf('}') + 1;
-      const jsonString = aiResponse.substring(jsonStart, jsonEnd);
+      const responseString = typeof aiResponse === "string" ? aiResponse : String(aiResponse);
+      const jsonStart = responseString.indexOf("{");
+      const jsonEnd = responseString.lastIndexOf("}") + 1;
+      const jsonString = responseString.substring(jsonStart, jsonEnd);
       parsedResponse = JSON.parse(jsonString);
     } catch (parseError) {
       console.error("Error parsing AI response:", parseError);

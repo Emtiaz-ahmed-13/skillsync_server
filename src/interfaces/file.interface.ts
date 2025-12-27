@@ -8,7 +8,7 @@ export interface IFile {
   mimeType: string;
   size: number;
   url: string;
-  projectId: Types.ObjectId;
+  projectId?: Types.ObjectId;
   milestoneId?: Types.ObjectId;
   uploadedBy: Types.ObjectId;
   folder?: string;

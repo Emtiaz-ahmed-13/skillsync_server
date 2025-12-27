@@ -1,9 +1,9 @@
 /* eslint-disable @typescript-eslint/no-unused-vars */
+import dotenv from "dotenv";
 import { Server } from "http";
 import app from "./app";
 import config from "./config";
 import connectDB from "./config/database";
-import dotenv from "dotenv";
 
 dotenv.config();
 

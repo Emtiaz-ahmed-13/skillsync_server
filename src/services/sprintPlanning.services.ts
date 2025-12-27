@@ -1,8 +1,8 @@
 import { Project } from "../models/project.model";
 import { Sprint } from "../models/sprint.model";
 import { Task } from "../models/task.model";
-import { AiServices } from "./ai.services";
 import ApiError from "../utils/ApiError";
+import { AiServices } from "./ai.services";
 
 const generateAiSprintPlan = async (projectId: string, method: "auto" | "manual" = "auto") => {
   // Get project details
@@ -32,9 +32,9 @@ const generateAiSprintPlan = async (projectId: string, method: "auto" | "manual"
           description: "Description for sprint 3",
           startDate: new Date(Date.now() + 28 * 24 * 60 * 60 * 1000),
           endDate: new Date(Date.now() + 42 * 24 * 60 * 60 * 1000), // 6 weeks from now
-        }
+        },
       ],
-      tasks: []
+      tasks: [],
     };
   }
 
@@ -42,7 +42,7 @@ const generateAiSprintPlan = async (projectId: string, method: "auto" | "manual"
   const aiResponse = await AiServices.analyzeProjectAndGenerateTasks(
     projectId,
     project.description,
-    project.title
+    project.title,
   );
 
   // Calculate dates for sprints (assuming 2 weeks per sprint)
@@ -55,7 +55,7 @@ const generateAiSprintPlan = async (projectId: string, method: "auto" | "manual"
 
   return {
     sprints,
-    tasks: aiResponse.tasks
+    tasks: aiResponse.tasks,
   };
 };
 
@@ -66,7 +66,7 @@ const saveSprintPlan = async (projectId: string, sprintData: any[]) => {
 
   // Create new sprints and collect their IDs
   const sprintMap: Record<string, string> = {};
-  const createdSprints = [];
+  const createdSprints: any[] = [];
 
   for (const sprintInfo of sprintData) {
     const sprintPayload = {
@@ -79,28 +79,36 @@ const saveSprintPlan = async (projectId: string, sprintData: any[]) => {
     createdSprints.push({
       ...sprint.toObject(),
       id: sprint._id.toString(),
-    });
+    } as any);
   }
 
   return createdSprints;
 };
 
-const saveTasksForSprintPlan = async (projectId: string, taskData: any[], sprintMap: Record<string, string>) => {
-  const tasksToCreate = taskData.map(task => ({
+const saveTasksForSprintPlan = async (
+  projectId: string,
+  taskData: any[],
+  sprintMap: Record<string, string>,
+) => {
+  const tasksToCreate = taskData.map((task) => ({
     ...task,
     projectId,
     sprintId: sprintMap[task.sprint] || null, // Map sprint name to sprint ID
   }));
 
   const tasks = await Task.insertMany(tasksToCreate);
-  
-  return tasks.map(task => ({
+
+  return tasks.map((task) => ({
     ...task.toObject(),
     id: task._id.toString(),
   }));
 };
 
-const createSprintPlan = async (projectId: string, method: "auto" | "manual" = "auto", customData?: any) => {
+const createSprintPlan = async (
+  projectId: string,
+  method: "auto" | "manual" = "auto",
+  customData?: any,
+) => {
   let sprintPlan;
 
   if (method === "manual" && customData) {
@@ -116,11 +124,11 @@ const createSprintPlan = async (projectId: string, method: "auto" | "manual" = "
 
   // Create a map of sprint names to IDs for task assignment
   const sprintMap: Record<string, string> = {};
-  createdSprints.forEach(sprint => {
+  createdSprints.forEach((sprint) => {
     // Extract sprint number from name (e.g., "Sprint 1: Foundation" -> "Sprint 1")
-    const sprintNameMatch = sprint.name.match(/^(Sprint \d+)/);
+    const sprintNameMatch = (sprint as any).name.match(/^(Sprint \d+)/);
     if (sprintNameMatch) {
-      sprintMap[sprintNameMatch[1]] = sprint.id;
+      sprintMap[sprintNameMatch[1]] = (sprint as any).id;
     }
   });
 
@@ -129,15 +137,13 @@ const createSprintPlan = async (projectId: string, method: "auto" | "manual" = "
 
   return {
     sprints: createdSprints,
-    tasks: createdTasks
+    tasks: createdTasks,
   };
 };
 
 const getSprintPlan = async (projectId: string) => {
   // Get all sprints for the project
-  const sprints = await Sprint.find({ projectId })
-    .sort({ startDate: 1 })
-    .lean();
+  const sprints = await Sprint.find({ projectId }).sort({ startDate: 1 }).lean();
 
   // Get all tasks for the project
   const tasks = await Task.find({ projectId })
@@ -146,14 +152,14 @@ const getSprintPlan = async (projectId: string) => {
     .lean();
 
   return {
-    sprints: sprints.map(sprint => ({
+    sprints: sprints.map((sprint) => ({
       ...sprint,
       id: sprint._id.toString(),
     })),
-    tasks: tasks.map(task => ({
+    tasks: tasks.map((task) => ({
       ...task,
       id: task._id.toString(),
-    }))
+    })),
   };
 };
 

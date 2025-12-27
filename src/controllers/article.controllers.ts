@@ -24,7 +24,6 @@ interface CustomRequest extends Request {
 }
 
 const createArticle = catchAsync(async (req: CustomRequest, res: Response) => {
-  // Handle different JWT token structures
   const userId = req.user?.id || req.user?._id || req.user?._doc?._id;
 
   if (!userId) {
@@ -77,7 +76,6 @@ const getArticleBySlug = catchAsync(async (req: CustomRequest, res: Response) =>
 });
 
 const updateArticle = catchAsync(async (req: CustomRequest, res: Response) => {
-  // Handle different JWT token structures
   const userId = req.user?.id || req.user?._id || req.user?._doc?._id;
   const { id } = req.params;
 
@@ -101,7 +99,6 @@ const updateArticle = catchAsync(async (req: CustomRequest, res: Response) => {
 });
 
 const deleteArticle = catchAsync(async (req: CustomRequest, res: Response) => {
-  // Handle different JWT token structures
   const userId = req.user?.id || req.user?._id || req.user?._doc?._id;
   const { id } = req.params;
 
@@ -125,7 +122,6 @@ const deleteArticle = catchAsync(async (req: CustomRequest, res: Response) => {
 });
 
 const approveArticle = catchAsync(async (req: CustomRequest, res: Response) => {
-  // Handle different JWT token structures
   const userId = req.user?.id || req.user?._id || req.user?._doc?._id;
   const { id } = req.params;
   const { status } = req.body;

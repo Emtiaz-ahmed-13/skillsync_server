@@ -2,12 +2,7 @@
 import jwt, { JwtPayload, Secret } from "jsonwebtoken";
 
 const generateToken = (payload: any, secret: Secret, expiresIn: string) => {
-  // @ts-expect-error - jsonwebtoken types have strict requirements that don't match runtime behavior
-  const token = jwt.sign(payload, secret, {
-    expiresIn,
-  });
-
-  return token;
+  return jwt.sign(payload, secret as any, { expiresIn } as any);
 };
 
 const verifyToken = (token: string, secret: Secret) => {

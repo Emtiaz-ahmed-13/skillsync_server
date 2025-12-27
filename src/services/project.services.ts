@@ -1,5 +1,6 @@
 import { IProject } from "../interfaces/project.interface";
 import { Project } from "../models/project.model";
+import { User } from "../models/user.model";
 import { NotificationServices } from "./notification.services";
 
 /**
@@ -16,14 +17,20 @@ const createProject = async (projectData: IProject): Promise<IProject> => {
 
   // Notify admin about new project
   try {
-    await NotificationServices.createNotification({
-      userId: "admin", // This should be replaced with actual admin ID(s)
-      senderId: projectData.ownerId,
-      type: "project_created",
-      title: "New Project Created",
-      message: `A new project "${projectData.title}" has been created and is pending approval.`,
-      projectId: project._id.toString(),
-    });
+    // Find all admin users to notify
+    const adminUsers = await User.find({ role: "admin" }).select("_id");
+
+    // Send notification to each admin
+    for (const admin of adminUsers) {
+      await NotificationServices.createNotification({
+        userId: admin._id.toString(),
+        senderId: projectData.ownerId,
+        type: "project_created",
+        title: "New Project Created",
+        message: `A new project "${projectData.title}" has been created and is pending approval.`,
+        projectId: project._id.toString(),
+      });
+    }
   } catch (error) {
     console.error("Failed to send notification:", error);
   }

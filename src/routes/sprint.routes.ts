@@ -6,41 +6,14 @@ import { createSprintSchema, updateSprintSchema } from "../validations/sprint.va
 
 const router = express.Router();
 
-// POST /sprints - Create a new sprint
-router.post(
-  "/",
-  auth(),
-  validateRequest(createSprintSchema),
-  SprintControllers.createSprint
-);
+router.post("/", auth(), validateRequest(createSprintSchema), SprintControllers.createSprint);
 
-// GET /sprints/project/:projectId - Get all sprints for a project
-router.get(
-  "/project/:projectId",
-  auth(),
-  SprintControllers.getSprintsByProject
-);
+router.get("/project/:projectId", auth(), SprintControllers.getSprintsByProject);
 
-// GET /sprints/:id - Get specific sprint
-router.get(
-  "/:id",
-  auth(),
-  SprintControllers.getSprintById
-);
+router.get("/:id", auth(), SprintControllers.getSprintById);
 
-// PATCH /sprints/:id - Update a sprint
-router.patch(
-  "/:id",
-  auth(),
-  validateRequest(updateSprintSchema),
-  SprintControllers.updateSprint
-);
+router.patch("/:id", auth(), validateRequest(updateSprintSchema), SprintControllers.updateSprint);
 
-// DELETE /sprints/:id - Delete a sprint
-router.delete(
-  "/:id",
-  auth(),
-  SprintControllers.deleteSprint
-);
+router.delete("/:id", auth(), SprintControllers.deleteSprint);
 
 export const sprintRoutes = router;

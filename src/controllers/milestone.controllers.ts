@@ -1,11 +1,11 @@
 import { Request, Response } from "express";
-import { ProjectServices } from "../services/project.services";
+import { MilestoneServices } from "../services/milestone.services";
 import catchAsync from "../utils/catchAsync";
 import sendResponse from "../utils/sendResponse";
 
 const getMilestoneById = catchAsync(async (req: Request, res: Response) => {
   const { id } = req.params;
-  const result = await ProjectServices.getMilestoneById(id);
+  const result = await MilestoneServices.getMilestoneById(id);
 
   sendResponse(res, {
     statusCode: 200,
@@ -17,7 +17,7 @@ const getMilestoneById = catchAsync(async (req: Request, res: Response) => {
 
 const updateMilestone = catchAsync(async (req: Request & { user?: any }, res: Response) => {
   const { id } = req.params;
-  const result = await ProjectServices.updateMilestone(id, req.body, req.user.id || req.user._id);
+  const result = await MilestoneServices.updateMilestone(id, req.body, req.user.id || req.user._id);
 
   sendResponse(res, {
     statusCode: 200,
@@ -29,7 +29,7 @@ const updateMilestone = catchAsync(async (req: Request & { user?: any }, res: Re
 
 const deleteMilestone = catchAsync(async (req: Request & { user?: any }, res: Response) => {
   const { id } = req.params;
-  const result = await ProjectServices.deleteMilestone(id, req.user.id || req.user._id);
+  const result = await MilestoneServices.deleteMilestone(id, req.user.id || req.user._id);
 
   sendResponse(res, {
     statusCode: 200,
@@ -41,7 +41,7 @@ const deleteMilestone = catchAsync(async (req: Request & { user?: any }, res: Re
 
 const completeMilestone = catchAsync(async (req: Request & { user?: any }, res: Response) => {
   const { id } = req.params;
-  const result = await ProjectServices.completeMilestone(id, req.user.id || req.user._id);
+  const result = await MilestoneServices.completeMilestone(id, req.user.id || req.user._id);
 
   sendResponse(res, {
     statusCode: 200,

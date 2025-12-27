@@ -1,6 +1,20 @@
 import { Schema, model } from "mongoose";
 import { ISprint } from "../interfaces/sprint.interface";
 
+const featureSchema = new Schema(
+  {
+    id: { type: String, required: true },
+    title: { type: String, required: true },
+    description: { type: String, required: true },
+    status: {
+      type: String,
+      enum: ["pending", "in-progress", "completed"],
+      default: "pending",
+    },
+  },
+  { _id: false },
+);
+
 const sprintSchema = new Schema<ISprint>(
   {
     projectId: {
@@ -8,15 +22,15 @@ const sprintSchema = new Schema<ISprint>(
       ref: "Project",
       required: true,
     },
-    name: {
+    title: {
       type: String,
       required: true,
-      trim: true,
     },
     description: {
       type: String,
-      trim: true,
+      required: true,
     },
+    features: [featureSchema],
     startDate: {
       type: Date,
       required: true,
@@ -27,8 +41,8 @@ const sprintSchema = new Schema<ISprint>(
     },
     status: {
       type: String,
-      enum: ["planned", "in-progress", "completed"],
-      default: "planned",
+      enum: ["planning", "in-progress", "completed"],
+      default: "planning",
     },
   },
   { timestamps: true },

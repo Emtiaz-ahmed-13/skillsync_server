@@ -3,14 +3,10 @@ import Stripe from "stripe";
 
 dotenv.config();
 
-// Initialize Stripe
 const stripe = new Stripe(process.env.STRIPE_SECRET_KEY || "", {
   apiVersion: "2025-11-17.clover",
 });
 
-/**
- * Create a payment intent
- */
 const createPaymentIntent = async (
   amount: number,
   currency: string = "usd",
@@ -33,9 +29,6 @@ const createPaymentIntent = async (
   }
 };
 
-/**
- * Confirm a payment intent
- */
 const confirmPaymentIntent = async (paymentIntentId: string) => {
   try {
     const paymentIntent = await stripe.paymentIntents.confirm(paymentIntentId);

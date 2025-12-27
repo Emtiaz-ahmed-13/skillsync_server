@@ -3,7 +3,6 @@ import ImageKit from "imagekit";
 
 dotenv.config();
 
-// Initialize ImageKit only if all required environment variables are present
 let imagekit: ImageKit | null = null;
 
 if (
@@ -20,9 +19,6 @@ if (
   console.warn("ImageKit configuration missing. File uploads will be stored locally.");
 }
 
-/**
- * Upload file to ImageKit
- */
 const uploadFile = async (fileBuffer: Buffer, fileName: string, folderPath: string = "/") => {
   if (!imagekit) {
     throw new Error("ImageKit not configured");
@@ -48,9 +44,6 @@ const uploadFile = async (fileBuffer: Buffer, fileName: string, folderPath: stri
   }
 };
 
-/**
- * Delete file from ImageKit
- */
 const deleteFile = async (fileId: string) => {
   if (!imagekit) {
     throw new Error("ImageKit not configured");
@@ -64,9 +57,6 @@ const deleteFile = async (fileId: string) => {
   }
 };
 
-/**
- * Get file metadata from ImageKit
- */
 const getFileMetadata = async (fileId: string) => {
   if (!imagekit) {
     throw new Error("ImageKit not configured");
@@ -79,10 +69,6 @@ const getFileMetadata = async (fileId: string) => {
     throw new Error(`Failed to get file metadata: ${error.message}`);
   }
 };
-
-/**
- * Generate signed URL for private files
- */
 const generateSignedUrl = async (path: string, expiresIn: number = 3600) => {
   if (!imagekit) {
     throw new Error("ImageKit not configured");

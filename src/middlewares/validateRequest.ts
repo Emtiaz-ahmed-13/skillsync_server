@@ -13,7 +13,7 @@ const validateRequest =
           throw safeParseResult.error;
         }
         // Update req.params with validated data if needed
-        req.params = safeParseResult.data.params;
+        req.params = (safeParseResult.data as any).params;
       } else {
         // For body validation, wrap the request body in an object with a body property for validation
         const safeParseResult = schema.safeParse({ body: req.body });

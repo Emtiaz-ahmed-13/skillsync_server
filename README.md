@@ -1,6 +1,8 @@
 # SkillSync Server
 
-A Professional Collaboration Hub for Freelancers and Clients
+**A Professional Collaboration Hub for Freelancers and Clients**
+
+---
 
 ## Table of Contents
 
@@ -17,7 +19,9 @@ A Professional Collaboration Hub for Freelancers and Clients
 
 ## Overview
 
-SkillSync is a centralized web-based collaboration platform designed to streamline workflows between freelancers and clients. Unlike traditional freelancing platforms that focus mainly on job listings, SkillSync emphasizes project management, milestone-based payments, progress tracking, and seamless communication — all within one intuitive interface.
+SkillSync is an enterprise-grade, centralized web-based collaboration platform designed to streamline workflows between freelancers and clients. Unlike traditional freelancing platforms that focus mainly on job listings, SkillSync emphasizes project management, milestone-based payments, progress tracking, and seamless communication — all within one intuitive interface.
+
+Built with scalability and security in mind, the platform provides a comprehensive solution for project lifecycle management, from initial proposal to final delivery and payment processing.
 
 ## Features
 
@@ -26,64 +30,121 @@ SkillSync is a centralized web-based collaboration platform designed to streamli
 1. **User Authentication & Profiles**
    - Secure signup/login with JWT
    - Profile setup for freelancers (portfolio, hourly rate) and clients
-   - Role-based dashboards
+   - Role-based dashboards with granular permissions
 
 2. **Project Dashboard**
    - Centralized workspace showing project status, milestones, and recent activity
-   - Project creation and management
+   - Project creation and management with approval workflow
+   - Real-time progress tracking and analytics
 
 3. **Milestone & Payment System**
    - Stripe-based milestone & payment processing
-   - Secure payment handling
+   - Secure payment handling with escrow functionality
+   - Automated payment distribution upon milestone completion
 
 4. **File Sharing**
    - Secure file uploads with ImageKit
    - Project and milestone-specific file organization
+   - Version control and access management
 
 5. **Task Management**
-   - Kanban-style task management
+   - Kanban-style task management with drag-and-drop functionality
    - Task assignment and status tracking
+   - Priority and deadline management
 
 6. **Time Tracking**
-   - Manual time logging
+   - Manual and automated time logging
    - Detailed work logs per milestone
+   - Time reporting and analytics
 
 7. **Rating System**
    - Two-way feedback after project completion
-   - Detailed rating criteria
+   - Detailed rating criteria across multiple dimensions
+   - Reputation scoring system
 
 8. **Notification System**
    - Real-time alerts for project updates
-   - Event-based notifications
+   - Event-based notifications with customizable preferences
+   - Push notifications and email integration
 
 9. **Admin Dashboard**
-   - User management
-   - Dispute resolution
+   - User management and role assignment
+   - Dispute resolution tools
    - Analytics and reporting
+   - Content moderation capabilities
 
 ## Technology Stack
 
 - **Backend**: Node.js, Express.js, TypeScript
 - **Database**: MongoDB with Mongoose ODM
-- **Authentication**: JWT-based authentication
-- **Validation**: Zod schema validation
-- **File Storage**: ImageKit
-- **Payments**: Stripe API
-- **Email**: Nodemailer
-- **Testing**: Jest
-- **Deployment**: Docker, Vercel
+- **Authentication**: JWT-based authentication with refresh token mechanism
+- **Validation**: Zod schema validation for robust input validation
+- **File Storage**: ImageKit for secure and scalable file management
+- **Payments**: Stripe API for secure payment processing
+- **Email**: Nodemailer for transactional email delivery
+- **Testing**: Jest for comprehensive test coverage
+- **Deployment**: Docker containerization, CI/CD pipeline ready
 
 ## System Architecture
 
-The backend follows an MVC (Model-View-Controller) architecture for modular and maintainable code:
+The backend follows a robust MVC (Model-View-Controller) architecture with additional service layer for modular and maintainable code:
 
 ```
 Model: Defines schemas for users, projects, milestones, tasks, files, payments, reviews, notifications, and time tracking.
 Controller: Contains business logic for all workflows.
 Service: Handles data processing and external API integrations.
+Middleware: Implements authentication, validation, and error handling.
+Validation: Ensures data integrity and security through Zod schemas.
 ```
 
+The architecture is designed with scalability in mind, following these key principles:
+
+- **Separation of Concerns**: Each component has a single responsibility
+- **Loose Coupling**: Components interact through well-defined interfaces
+- **High Cohesion**: Related functionality is grouped together
+- **Maintainability**: Clean code structure with consistent patterns
+- **Testability**: Components can be easily unit tested
+
 ## API Documentation
+
+The SkillSync API follows RESTful principles and uses standard HTTP response codes. All API endpoints return JSON responses and follow consistent error handling patterns.
+
+### Authentication
+
+Most endpoints require authentication using JWT tokens. Include the token in the Authorization header:
+
+```
+Authorization: Bearer <token>
+```
+
+### Error Response Format
+
+All error responses follow this structure:
+
+```json
+{
+  "success": false,
+  "message": "Error message",
+  "error": {
+    "code": "ERROR_CODE",
+    "details": "Additional error details"
+  }
+}
+```
+
+### Success Response Format
+
+Success responses follow this structure:
+
+```json
+{
+  "success": true,
+  "message": "Success message",
+  "data": {
+    /* response data */
+  }
+}
+```
 
 ### Authentication Endpoints
 
@@ -194,7 +255,21 @@ Service: Handles data processing and external API integrations.
 - `GET /api/v1/admin/disputes` - Get all disputes
 - `PUT /api/v1/admin/disputes/:id/resolve` - Resolve dispute
 
+## System Architecture Diagram
+
+![System Architecture](https://www.mermaidchart.com/app/projects/584c66dc-ea03-471e-8ce3-dd0cae417f30/diagrams/d6e1c99c-e221-4d41-b8e6-0ad519c628e6/share/invite/eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJkb2N1bWVudElEIjoiZDZlMWM5OWMtZTIyMS00ZDQxLWI4ZTYtMGFkNTE5YzYyOGU2IiwiYWNjZXNzIjoiRWRpdCIsImlhdCI6MTc2Njg2MTk1Mn0.ej_9GBBXgo3zt8ZSn7K-dITgPkjr5_Ik4lmVx2VqqrI)
+
+The above diagram illustrates the complete system architecture, including the database schema relationships, API endpoints, and data flow between components. The system follows a modern microservices approach with clear separation of concerns.
+
 ## Installation
+
+### Prerequisites
+
+- Node.js (v18 or higher)
+- MongoDB (v4.4 or higher)
+- Git
+
+### Setup Instructions
 
 1. Clone the repository:
 
@@ -211,7 +286,7 @@ Service: Handles data processing and external API integrations.
 
 3. Set up environment variables (see below)
 
-4. Start the development server:
+4. Verify the installation:
    ```bash
    npm run dev
    ```
@@ -220,7 +295,7 @@ Service: Handles data processing and external API integrations.
 
 Create a `.env` file in the root directory with the following variables:
 
-```env
+```
 # Server Configuration
 PORT=5000
 NODE_ENV=development
@@ -257,47 +332,171 @@ CLIENT_URL=http://localhost:3000
 
 ### Development Mode
 
+For development with hot-reloading and detailed logging:
+
 ```bash
 npm run dev
 ```
 
+This command starts the server in development mode with nodemon, automatically restarting the server when code changes are detected.
+
 ### Production Mode
+
+For production deployment:
 
 ```bash
 npm start
 ```
 
+This command runs the compiled application in production mode.
+
+### Docker Deployment
+
+To run the application using Docker:
+
+```bash
+# Build the Docker image
+docker build -t skillsync-server .
+
+# Run the container
+docker run -p 5000:5000 skillsync-server
+```
+
 ## Building for Production
+
+To create an optimized production build:
 
 ```bash
 npm run build
 ```
 
+This command compiles the TypeScript code to JavaScript, performs optimization, and prepares the application for production deployment. The build output will be placed in the `dist/` directory.
+
+For production deployment, ensure that:
+
+- Environment variables are properly configured
+- Database connections are established
+- All external services (ImageKit, Stripe, etc.) are properly configured
+- SSL certificates are in place for secure connections
+
 ## Project Structure
 
 ```
 src/
-├── app.ts                  # Application entry point
-├── server.ts               # Server setup
+├── app.ts                  # Application entry point with middleware setup
+├── server.ts               # Server setup and startup configuration
 ├── config/                 # Configuration files
-├── controllers/            # Request handlers
-├── interfaces/             # TypeScript interfaces
-├── middlewares/            # Custom middlewares
-├── models/                 # Mongoose models
+│   ├── database.ts         # Database connection setup
+│   └── index.ts            # Global configuration
+├── controllers/            # Request handlers with business logic
+│   ├── admin.controllers.ts
+│   ├── auth.controllers.ts
+│   ├── project.controllers.ts
+│   ├── milestone.controllers.ts
+│   ├── task.controllers.ts
+│   ├── file.controllers.ts
+│   ├── timeTracking.controllers.ts
+│   ├── review.controllers.ts
+│   ├── notification.controllers.ts
+│   └── payment.controllers.ts
+├── interfaces/             # TypeScript interfaces for type safety
+│   ├── user.interface.ts
+│   ├── project.interface.ts
+│   ├── milestone.interface.ts
+│   ├── task.interface.ts
+│   ├── file.interface.ts
+│   ├── timeTracking.interface.ts
+│   ├── review.interface.ts
+│   ├── notification.interface.ts
+│   └── payment.interface.ts
+├── middlewares/            # Custom middleware functions
+│   ├── auth.ts             # Authentication middleware
+│   ├── globalErrorHandler.ts # Global error handling
+│   ├── upload.middleware.ts # File upload handling
+│   └── validateRequest.ts   # Request validation middleware
+├── models/                 # Mongoose models and schemas
+│   ├── user.model.ts
+│   ├── project.model.ts
+│   ├── milestone.model.ts
+│   ├── task.model.ts
+│   ├── file.model.ts
+│   ├── timeTracking.model.ts
+│   ├── review.model.ts
+│   ├── notification.model.ts
+│   └── payment.model.ts
 ├── routes/                 # API route definitions
-├── services/               # Business logic
-├── utils/                  # Utility functions
+│   ├── admin.routes.ts
+│   ├── auth.routes.ts
+│   ├── project.routes.ts
+│   ├── milestone.routes.ts
+│   ├── task.routes.ts
+│   ├── file.routes.ts
+│   ├── timeTracking.routes.ts
+│   ├── review.routes.ts
+│   ├── notification.routes.ts
+│   └── payment.routes.ts
+├── services/               # Business logic and external API integrations
+│   ├── admin.services.ts
+│   ├── auth.services.ts
+│   ├── project.services.ts
+│   ├── milestone.services.ts
+│   ├── task.services.ts
+│   ├── file.services.ts
+│   ├── timeTracking.services.ts
+│   ├── review.services.ts
+│   ├── notification.services.ts
+│   └── payment.services.ts
+├── utils/                  # Utility functions and helpers
+│   ├── ApiError.ts         # Custom error class
+│   ├── catchAsync.ts       # Async error wrapper
+│   ├── jwtHelpers.ts       # JWT utilities
+│   ├── email.utils.ts      # Email utilities
+│   ├── imagekit.utils.ts   # ImageKit integration
+│   ├── stripe.utils.ts     # Stripe payment utilities
+│   └── sendResponse.ts     # Standardized response format
 └── validations/            # Zod validation schemas
+    ├── auth.validation.ts
+    ├── project.validation.ts
+    ├── milestone.validation.ts
+    ├── task.validation.ts
+    ├── file.validation.ts
+    ├── timeTracking.validation.ts
+    ├── review.validation.ts
+    ├── notification.validation.ts
+    └── payment.validation.ts
 ```
 
 ## Contributing
 
+We welcome contributions to the SkillSync project! To maintain code quality and consistency, please follow these guidelines:
+
 1. Fork the repository
 2. Create your feature branch (`git checkout -b feature/AmazingFeature`)
-3. Commit your changes (`git commit -m 'Add some AmazingFeature'`)
-4. Push to the branch (`git push origin feature/AmazingFeature`)
-5. Open a pull request
+3. Ensure your code follows the project's coding standards
+4. Write comprehensive tests for new features
+5. Commit your changes using conventional commit messages (`git commit -m 'feat: Add some AmazingFeature'`)
+6. Push to the branch (`git push origin feature/AmazingFeature`)
+7. Open a pull request with a detailed description of your changes
+
+### Development Workflow
+
+- All feature development should be done in feature branches
+- Code reviews are mandatory for all pull requests
+- Automated tests must pass before merging
+- Documentation updates are required for API changes
+
+## Security
+
+We take security seriously. If you discover any security vulnerabilities, please report them to our security team at [security@skillsync.com](mailto:security@skillsync.com) instead of creating a public issue.
 
 ## License
 
 This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
+
+## Support
+
+For support, please contact our development team through:
+
+- GitHub Issues for bug reports and feature requests
+- Email: [support@skillsync.com](mailto:support@skillsync.com)
+- Documentation: [https://skillsync-docs.com](https://skillsync-docs.com)

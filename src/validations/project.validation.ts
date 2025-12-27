@@ -10,7 +10,7 @@ export const createProjectSchema = z.object({
       .array(z.string().min(1, "Technology cannot be empty"))
       .min(1, "At least one technology is required"),
     picture: z.string().optional(),
-    ownerId: z.string().min(1, "Owner ID is required"),
+    ownerId: z.string().optional(), 
   }),
 });
 
