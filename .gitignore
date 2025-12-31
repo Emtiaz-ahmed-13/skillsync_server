@@ -14,3 +14,4 @@ uploads/
 __snapshots__/
 node/
 Thumbs.db
+.vercel

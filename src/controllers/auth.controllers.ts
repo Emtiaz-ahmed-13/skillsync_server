@@ -6,7 +6,6 @@ import sendResponse from "../utils/sendResponse";
 import { ImageKitUtils } from "../utils/imagekit.utils";
 
 const signup = catchAsync(async (req: Request, res: Response) => {
-  // Handle file upload for avatar
   if (req.file) {
     try {
       const uploadResult = await ImageKitUtils.uploadFile(
@@ -17,8 +16,6 @@ const signup = catchAsync(async (req: Request, res: Response) => {
       req.body.avatar = uploadResult.url;
     } catch (error) {
       console.error("Avatar upload failed:", error);
-      // We can choose to proceed without avatar or throw error. 
-      // Proceeding ensures user can still signup even if image upload fails.
     }
   }
 
@@ -55,28 +52,8 @@ const getUserById = catchAsync(async (req: Request, res: Response) => {
   });
 });
 
-const googleCallback = catchAsync(async (req: Request, res: Response) => {
-  if (!req.user) {
-    return sendResponse(res, {
-      statusCode: 401,
-      success: false,
-      message: "Google Authentication Failed",
-      data: null,
-    });
-  }
-
-  const result = await AuthServices.loginWithGoogle(req.user);
-
-  // Redirect to frontend with tokens
-  // Note: ideally should be configurable via env
-  res.redirect(
-    `http://localhost:3000?accessToken=${result.accessToken}&refreshToken=${result.refreshToken}`
-  );
-});
-
 export const AuthControllers = {
   signup,
   login,
-  getUserById,
-  googleCallback,
+  getUserById
 };
