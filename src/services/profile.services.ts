@@ -106,11 +106,9 @@ const deleteProfile = async (userId: string) => {
     throw new ApiError(404, "User not found");
   }
   const deletedUser = await User.findByIdAndDelete(userId);
-
   if (!deletedUser) {
     throw new ApiError(500, "Failed to delete user profile");
   }
-
   return { message: "Profile deleted successfully" };
 };
 

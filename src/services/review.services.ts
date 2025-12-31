@@ -24,19 +24,14 @@ const createReview = async (payload: CreateReviewPayload) => {
   const reviewer = await User.findById(payload.reviewerId);
   if (!reviewer) {
     throw new ApiError(404, "Reviewer not found");
-  
   }
   const reviewee = await User.findById(payload.revieweeId);
   if (!reviewee) {
     throw new ApiError(404, "Reviewee not found");
   }
-
-  // Check if reviewer and reviewee are different
   if (payload.reviewerId === payload.revieweeId) {
     throw new ApiError(400, "You cannot review yourself");
   }
-
-  // Check if review already exists for this project and reviewer-reviewee pair
   const existingReview = await Review.findOne({
     projectId: payload.projectId,
     reviewerId: payload.reviewerId,
@@ -77,10 +72,7 @@ const getUserReviews = async (userId: string, limit: number = 10, page: number =
     .limit(limit)
     .skip(skip)
     .lean();
-
   const total = await Review.countDocuments({ revieweeId: userId });
-
-  // Calculate average rating
   const totalRating = reviews.reduce((sum, review) => sum + review.rating, 0);
   const averageRating = reviews.length > 0 ? totalRating / reviews.length : 0;
 
@@ -118,8 +110,6 @@ const getProjectReviews = async (projectId: string) => {
     .populate("revieweeId", "name email avatar")
     .sort({ createdAt: -1 })
     .lean();
-
-  // Calculate average rating
   const totalRating = reviews.reduce((sum, review) => sum + review.rating, 0);
   const averageRating = reviews.length > 0 ? totalRating / reviews.length : 0;
 
@@ -151,7 +141,6 @@ const deleteReview = async (reviewId: string, userId: string) => {
     throw new ApiError(404, "Review not found");
   }
 
-  // Only the reviewer can delete their review
   if (review.reviewerId.toString() !== userId) {
     throw new ApiError(403, "You can only delete your own reviews");
   }

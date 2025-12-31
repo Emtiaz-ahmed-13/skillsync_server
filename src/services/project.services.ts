@@ -139,9 +139,6 @@ const getPendingProjects = async (
   };
 };
 
-/**
- * Update project by ID
- */
 const updateProject = async (
   id: string,
   updateData: Partial<IProject>,
@@ -162,9 +159,6 @@ const updateProject = async (
   };
 };
 
-/**
- * Approve or reject project by ID
- */
 const approveProject = async (
   id: string,
   status: "approved" | "rejected",
@@ -180,7 +174,6 @@ const approveProject = async (
     return null;
   }
 
-  // Notify project owner about approval/rejection
   try {
     await NotificationServices.createNotification({
       userId: project.ownerId,

@@ -131,7 +131,6 @@ const updateTimeTracking = async (timeTrackingId: string, payload: UpdateTimeTra
   if (!updatedTimeTracking) {
     throw new ApiError(500, "Failed to update time tracking record");
   }
-
   const timeTrackingObj = updatedTimeTracking.toObject();
   return timeTrackingObj;
 };
@@ -145,7 +144,6 @@ const deleteTimeTracking = async (timeTrackingId: string) => {
 
   return { message: "Time tracking record deleted successfully" };
 };
-
 export const TimeTrackingServices = {
   createTimeTracking,
   getTimeTrackingById,

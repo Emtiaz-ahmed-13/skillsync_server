@@ -12,9 +12,6 @@ const transporter = nodemailer.createTransporter({
   },
 });
 
-/**
- * Send email
- */
 const sendEmail = async (to: string, subject: string, html: string, text?: string) => {
   try {
     const info = await transporter.sendMail({
@@ -34,9 +31,6 @@ const sendEmail = async (to: string, subject: string, html: string, text?: strin
   }
 };
 
-/**
- * Send welcome email
- */
 const sendWelcomeEmail = async (to: string, name: string) => {
   const subject = "Welcome to SkillSync!";
   const html = `
@@ -58,9 +52,6 @@ const sendWelcomeEmail = async (to: string, name: string) => {
   return await sendEmail(to, subject, html);
 };
 
-/**
- * Send project invitation email
- */
 const sendProjectInvitationEmail = async (to: string, projectName: string, inviterName: string) => {
   const subject = `You've been invited to join "${projectName}" on SkillSync`;
   const html = `
@@ -74,10 +65,6 @@ const sendProjectInvitationEmail = async (to: string, projectName: string, invit
 
   return await sendEmail(to, subject, html);
 };
-
-/**
- * Send payment confirmation email
- */
 const sendPaymentConfirmationEmail = async (
   to: string,
   amount: number,

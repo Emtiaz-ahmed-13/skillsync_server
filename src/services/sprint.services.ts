@@ -56,16 +56,12 @@ const updateSprint = async (sprintId: string, payload: any) => {
 };
 
 const deleteSprint = async (sprintId: string) => {
-  // First delete all tasks associated with this sprint
+ 
   await Task.deleteMany({ sprintId });
-
-  // Then delete the sprint
   const sprint = await Sprint.findByIdAndDelete(sprintId);
-
   if (!sprint) {
     throw new ApiError(404, "Sprint not found");
   }
-
   return { message: "Sprint deleted successfully" };
 };
 
