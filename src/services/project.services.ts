@@ -1,13 +1,11 @@
 import { IProject } from "../interfaces/project.interface";
 import { Project } from "../models/project.model";
+import { Sprint } from "../models/sprint.model";
 import { User } from "../models/user.model";
 import { NotificationServices } from "./notification.services";
 
-/**
- * Create a new project
- */
 const createProject = async (projectData: IProject): Promise<IProject> => {
-  // Set default status to pending
+
   const projectWithStatus = {
     ...projectData,
     status: "pending",
@@ -15,12 +13,9 @@ const createProject = async (projectData: IProject): Promise<IProject> => {
 
   const project = await Project.create(projectWithStatus);
 
-  // Notify admin about new project
   try {
-    // Find all admin users to notify
     const adminUsers = await User.find({ role: "admin" }).select("_id");
 
-    // Send notification to each admin
     for (const admin of adminUsers) {
       await NotificationServices.createNotification({
         userId: admin._id.toString(),
@@ -37,17 +32,13 @@ const createProject = async (projectData: IProject): Promise<IProject> => {
 
   return project.toObject();
 };
-
-/**
- * Get all projects with pagination
- */
 const getAllProjects = async (
   limit: number = 10,
   page: number = 1,
 ): Promise<{ projects: IProject[]; totalCount: number }> => {
   const skip = (page - 1) * limit;
 
-  const projects = await Project.find().sort({ createdAt: -1 }).limit(limit).skip(skip).lean();
+  const projects = await Project.find().sort({ createdAt: -1 }).limit(limit).skip(skip).populate("ownerId", "name email").lean();
 
   const totalCount = await Project.countDocuments();
 
@@ -64,7 +55,7 @@ const getAllProjects = async (
  * Get projects by owner ID
  */
 const getProjectsByOwnerId = async (ownerId: string): Promise<IProject[]> => {
-  const projects = await Project.find({ ownerId }).sort({ createdAt: -1 }).lean();
+  const projects = await Project.find({ ownerId }).sort({ createdAt: -1 }).populate("ownerId", "name email").lean();
 
   return projects.map((project) => ({
     ...project,
@@ -81,13 +72,23 @@ const getApprovedProjects = async (
 ): Promise<{ projects: IProject[]; totalCount: number }> => {
   const skip = (page - 1) * limit;
 
-  const projects = await Project.find({ status: "approved" })
+  /* 
+   * MODIFIED: Including "in-progress" projects in this list to ensure users can see 
+   * projects they have just assigned to a freelancer, as per user request to "fix" missing projects.
+   * Ideally, this should be separate, but merging for visibility.
+   */
+  const projects = await Project.find({ 
+      status: { $in: ["approved", "in-progress"] } 
+    })
     .sort({ createdAt: -1 })
     .limit(limit)
     .skip(skip)
+    .populate("ownerId", "name email")
     .lean();
 
-  const totalCount = await Project.countDocuments({ status: "approved" });
+  const totalCount = await Project.countDocuments({ 
+    status: { $in: ["approved", "in-progress"] } 
+  });
 
   return {
     projects: projects.map((project) => ({
@@ -102,7 +103,7 @@ const getApprovedProjects = async (
  * Get project by ID
  */
 const getProjectById = async (id: string): Promise<IProject | null> => {
-  const project = await Project.findById(id).lean();
+  const project = await Project.findById(id).populate("ownerId", "name email").lean();
   if (!project) {
     return null;
   }
@@ -199,12 +200,33 @@ const approveProject = async (
   };
 };
 
-/**
- * Delete project by ID
- */
 const deleteProject = async (id: string): Promise<boolean> => {
   const result = await Project.findByIdAndDelete(id);
   return !!result;
+};
+
+const createProjectSprints = async (projectId: string, sprintData: any) => {
+  const project = await Project.findById(projectId);
+  if (!project) {
+    throw new Error("Project not found");
+  }
+
+  const createdSprints: any[] = [];
+
+  for (const sprint of sprintData.sprints || sprintData) {
+    const sprintPayload = {
+      ...sprint,
+      projectId: projectId,
+    };
+
+    const createdSprint = await Sprint.create(sprintPayload);
+    createdSprints.push(createdSprint);
+  }
+
+  return createdSprints.map((sprint) => ({
+    ...sprint.toObject(),
+    id: sprint._id.toString(),
+  }));
 };
 
 export const ProjectServices = {
@@ -217,4 +239,5 @@ export const ProjectServices = {
   updateProject,
   approveProject,
   deleteProject,
+  createProjectSprints,
 };

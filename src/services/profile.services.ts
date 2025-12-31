@@ -87,8 +87,6 @@ const updateClientProfile = async (userId: string, payload: TUpdateClientProfile
   if (user.role !== "client") {
     throw new ApiError(403, "Only clients can update client profile");
   }
-
-  // Merge with existing profile
   const updatedProfile: IClientProfile = {
     ...user.clientProfile,
     ...payload,
@@ -103,14 +101,10 @@ const updateClientProfile = async (userId: string, payload: TUpdateClientProfile
 };
 
 const deleteProfile = async (userId: string) => {
-  // Find user first to ensure they exist
   const user = await User.findById(userId);
-
   if (!user) {
     throw new ApiError(404, "User not found");
   }
-
-  // Delete the user
   const deletedUser = await User.findByIdAndDelete(userId);
 
   if (!deletedUser) {

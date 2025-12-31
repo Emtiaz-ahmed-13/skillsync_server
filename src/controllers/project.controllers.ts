@@ -221,6 +221,21 @@ const approveProject = catchAsync(async (req: Request & { user?: any }, res: Res
   });
 });
 
+// Create sprints for a specific project
+const createProjectSprints = catchAsync(async (req: Request, res: Response) => {
+  const { id: projectId } = req.params;
+  const sprintData = req.body;
+
+  const result = await ProjectServices.createProjectSprints(projectId, sprintData);
+
+  sendResponse(res, {
+    statusCode: 201,
+    success: true,
+    message: "Project sprints created successfully",
+    data: result,
+  });
+});
+
 export const ProjectControllers = {
   createProject,
   getAllProjects,
@@ -231,4 +246,5 @@ export const ProjectControllers = {
   updateProject,
   approveProject,
   deleteProject,
+  createProjectSprints,
 };

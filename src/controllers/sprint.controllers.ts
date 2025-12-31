@@ -5,7 +5,7 @@ import sendResponse from "../utils/sendResponse";
 
 const createSprint = catchAsync(async (req: Request, res: Response) => {
   const result = await SprintServices.createSprint(req.body);
-  
+
   sendResponse(res, {
     statusCode: 201,
     success: true,
@@ -17,7 +17,7 @@ const createSprint = catchAsync(async (req: Request, res: Response) => {
 const getSprintsByProject = catchAsync(async (req: Request, res: Response) => {
   const { projectId } = req.params;
   const result = await SprintServices.getSprintsByProject(projectId);
-  
+
   sendResponse(res, {
     statusCode: 200,
     success: true,
@@ -27,9 +27,9 @@ const getSprintsByProject = catchAsync(async (req: Request, res: Response) => {
 });
 
 const getSprintById = catchAsync(async (req: Request, res: Response) => {
-  const { id } = req.params;
-  const result = await SprintServices.getSprintById(id);
-  
+  const { sprintId } = req.params;
+  const result = await SprintServices.getSprintById(sprintId);
+
   sendResponse(res, {
     statusCode: 200,
     success: true,
@@ -39,9 +39,9 @@ const getSprintById = catchAsync(async (req: Request, res: Response) => {
 });
 
 const updateSprint = catchAsync(async (req: Request, res: Response) => {
-  const { id } = req.params;
-  const result = await SprintServices.updateSprint(id, req.body);
-  
+  const { sprintId } = req.params;
+  const result = await SprintServices.updateSprint(sprintId, req.body);
+
   sendResponse(res, {
     statusCode: 200,
     success: true,
@@ -51,9 +51,9 @@ const updateSprint = catchAsync(async (req: Request, res: Response) => {
 });
 
 const deleteSprint = catchAsync(async (req: Request, res: Response) => {
-  const { id } = req.params;
-  const result = await SprintServices.deleteSprint(id);
-  
+  const { sprintId } = req.params;
+  const result = await SprintServices.deleteSprint(sprintId);
+
   sendResponse(res, {
     statusCode: 200,
     success: true,

@@ -27,25 +27,20 @@ type UpdatePaymentPayload = {
 };
 
 const createPayment = async (payload: CreatePaymentPayload) => {
-  // Verify project exists
   const project = await Project.findById(payload.projectId);
   if (!project) {
     throw new ApiError(404, "Project not found");
   }
-
-  // Verify client exists
   const client = await User.findById(payload.clientId);
   if (!client) {
     throw new ApiError(404, "Client not found");
   }
-
-  // Verify freelancer exists
   const freelancer = await User.findById(payload.freelancerId);
   if (!freelancer) {
     throw new ApiError(404, "Freelancer not found");
   }
 
-  // Verify milestone exists (if provided)
+ 
   if (payload.milestoneId) {
     const milestone = await Milestone.findById(payload.milestoneId);
     if (!milestone) {
@@ -86,15 +81,12 @@ const getUserPayments = async (
   page: number = 1,
 ) => {
   const skip = (page - 1) * limit;
-
-  // Build query based on user role
   let query: any = {};
   if (role === "client") {
     query.clientId = userId;
   } else if (role === "freelancer") {
     query.freelancerId = userId;
   } else {
-    // Admin can see all payments
     query = {};
   }
 
@@ -109,8 +101,6 @@ const getUserPayments = async (
     .lean();
 
   const total = await Payment.countDocuments(query);
-
-  // Calculate total amount
   const totalAmount = payments.reduce((sum, payment) => sum + payment.amount, 0);
 
   return {
@@ -182,7 +172,6 @@ const getProjectPayments = async (projectId: string) => {
     .sort({ createdAt: -1 })
     .lean();
 
-  // Calculate total amount
   const totalAmount = payments.reduce((sum, payment) => sum + payment.amount, 0);
 
   return {

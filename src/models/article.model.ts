@@ -24,7 +24,7 @@ const articleSchema = new Schema<IArticle>(
     status: {
       type: String,
       enum: ["draft", "pending", "published", "rejected"],
-      default: "draft",
+      default: "pending",
     },
     featuredImage: {
       type: String,
@@ -36,6 +36,10 @@ const articleSchema = new Schema<IArticle>(
         trim: true,
       },
     ],
+    category: {
+      type: String,
+      trim: true,
+    },
     slug: {
       type: String,
       required: true,
@@ -52,6 +56,10 @@ const articleSchema = new Schema<IArticle>(
     },
     publishedAt: {
       type: Date,
+    },
+    rejectionReason: {
+      type: String,
+      trim: true,
     },
   },
   {

@@ -11,7 +11,6 @@ const path_1 = __importDefault(require("path"));
 const globalErrorHandler_1 = __importDefault(require("./middlewares/globalErrorHandler"));
 // Import route modules
 const admin_routes_1 = require("./routes/admin.routes");
-const aiSprintDistribution_routes_1 = require("./routes/aiSprintDistribution.routes");
 const article_routes_1 = require("./routes/article.routes");
 const auth_routes_1 = require("./routes/auth.routes");
 const bid_routes_1 = require("./routes/bid.routes");
@@ -63,7 +62,6 @@ app.get("/api/v1", (_req, res) => {
             payments: "/api/v1/payments",
             admin: "/api/v1/admin",
             workSubmissions: "/api/v1/work-submissions",
-            aiSprintDistribution: "/api/v1/ai-sprint-distribution",
         },
     });
 });
@@ -91,7 +89,6 @@ app.use("/api/v1/work-submissions", workSubmission_routes_1.workSubmissionRoutes
 app.use("/api/v1/reviews", review_routes_1.reviewRoutes);
 app.use("/api/v1/notifications", notification_routes_1.notificationRoutes);
 app.use("/api/v1/payments", payment_routes_1.paymentRoutes);
-app.use("/api/v1/ai-sprint-distribution", aiSprintDistribution_routes_1.aiSprintDistributionRoutes);
 app.use("/api/v1/admin", admin_routes_1.adminRoutes);
 app.use(globalErrorHandler_1.default);
 app.use((req, res) => {

@@ -24,9 +24,15 @@ interface CustomRequest extends Request {
 }
 
 const createArticle = catchAsync(async (req: CustomRequest, res: Response) => {
+  console.log("=== CREATE ARTICLE CALLED ===");
+  console.log("Request body:", req.body);
+  console.log("Request file:", (req as any).file);
+  
   const userId = req.user?.id || req.user?._id || req.user?._doc?._id;
+  console.log("User ID:", userId);
 
   if (!userId) {
+    console.log("No user ID found!");
     return sendResponse(res, {
       statusCode: 401,
       success: false,
@@ -34,15 +40,58 @@ const createArticle = catchAsync(async (req: CustomRequest, res: Response) => {
       data: null,
     });
   }
+  let featuredImageUrl = req.body.featuredImage;
+  
+  if ((req as any).file) {
+    console.log("Uploading image to ImageKit...");
+    try {
+      const { ImageKitUtils } = await import("../utils/imagekit.utils");
+      const uploadResult = await ImageKitUtils.uploadFile(
+        (req as any).file.buffer,
+        `article-${Date.now()}-${(req as any).file.originalname}`,
+        "/articles"
+      );
+      featuredImageUrl = uploadResult.url;
+      console.log("Image uploaded:", featuredImageUrl);
+    } catch (error) {
+      console.error("Image upload error:", error);
+    }
+  }
 
-  const result = await ArticleServices.createArticle(req.body, userId);
+  let tags = req.body.tags;
+  if (typeof tags === 'string') {
+    try {
+      tags = JSON.parse(tags);
+    } catch (e) {
+      tags = [];
+    }
+  }
 
-  sendResponse(res, {
-    statusCode: 201,
-    success: true,
-    message: "Article created successfully",
-    data: result,
-  });
+  const articleData = {
+    ...req.body,
+    tags,
+    featuredImage: featuredImageUrl,
+    status: req.body.status || "pending", 
+  };
+  
+  console.log("Article data to create:", articleData);
+
+  try {
+    const result = await ArticleServices.createArticle(articleData, userId);
+    console.log("Article created successfully:", result._id);
+
+    sendResponse(res, {
+      statusCode: 201,
+      success: true,
+      message: "Article created successfully",
+      data: result,
+    });
+  } catch (error) {
+    console.error("=== ERROR CREATING ARTICLE ===");
+    console.error("Error:", error);
+    console.error("Error stack:", error instanceof Error ? error.stack : "No stack trace");
+    throw error; 
+  }
 });
 
 const getAllArticles = catchAsync(async (req: CustomRequest, res: Response) => {
@@ -124,7 +173,6 @@ const deleteArticle = catchAsync(async (req: CustomRequest, res: Response) => {
 const approveArticle = catchAsync(async (req: CustomRequest, res: Response) => {
   const userId = req.user?.id || req.user?._id || req.user?._doc?._id;
   const { id } = req.params;
-  const { status } = req.body;
 
   if (!userId) {
     return sendResponse(res, {
@@ -135,12 +183,12 @@ const approveArticle = catchAsync(async (req: CustomRequest, res: Response) => {
     });
   }
 
-  const result = await ArticleServices.approveArticle(id, status, userId);
+  const result = await ArticleServices.approveArticle(id, userId);
 
   sendResponse(res, {
     statusCode: 200,
     success: true,
-    message: `Article ${status} successfully`,
+    message: "Article approved successfully",
     data: result,
   });
 });
@@ -161,6 +209,30 @@ const getPendingArticles = catchAsync(async (req: CustomRequest, res: Response) 
   });
 });
 
+const rejectArticle = catchAsync(async (req: CustomRequest, res: Response) => {
+  const userId = req.user?.id || req.user?._id || req.user?._doc?._id;
+  const { id } = req.params;
+  const { rejectionReason } = req.body;
+
+  if (!userId) {
+    return sendResponse(res, {
+      statusCode: 401,
+      success: false,
+      message: "Unauthorized: User ID not found",
+      data: null,
+    });
+  }
+
+  const result = await ArticleServices.rejectArticle(id, userId, rejectionReason);
+
+  sendResponse(res, {
+    statusCode: 200,
+    success: true,
+    message: "Article rejected successfully",
+    data: result,
+  });
+});
+
 export const ArticleControllers = {
   createArticle,
   getAllArticles,
@@ -168,5 +240,6 @@ export const ArticleControllers = {
   updateArticle,
   deleteArticle,
   approveArticle,
+  rejectArticle,
   getPendingArticles,
 };

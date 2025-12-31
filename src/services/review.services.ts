@@ -17,19 +17,15 @@ type CreateReviewPayload = {
 };
 
 const createReview = async (payload: CreateReviewPayload) => {
-  // Verify project exists
   const project = await Project.findById(payload.projectId);
   if (!project) {
     throw new ApiError(404, "Project not found");
   }
-
-  // Verify reviewer exists
   const reviewer = await User.findById(payload.reviewerId);
   if (!reviewer) {
     throw new ApiError(404, "Reviewer not found");
+  
   }
-
-  // Verify reviewee exists
   const reviewee = await User.findById(payload.revieweeId);
   if (!reviewee) {
     throw new ApiError(404, "Reviewee not found");

@@ -35,9 +35,21 @@ const projectSchema = new Schema<IProject>(
       default: "pending",
     },
     ownerId: {
-      type: String,
+      type: Schema.Types.ObjectId,
+      ref: "User",
       required: true,
     },
+    features: [
+      {
+        id: { type: String },
+        title: { type: String },
+        description: { type: String },
+        status: {
+          type: String,
+          enum: ["pending", "in-progress", "completed"],
+        },
+      },
+    ],
   },
   {
     timestamps: true,

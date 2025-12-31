@@ -84,8 +84,6 @@ const getArticleBySlug = async (slug: string) => {
   if (!article) {
     throw new ApiError(404, "Article not found");
   }
-
-  // Increment view count
   await Article.updateOne({ _id: article._id }, { $inc: { views: 1 } });
 
   return article;
@@ -102,25 +100,19 @@ const getArticleById = async (id: string) => {
 };
 
 const updateArticle = async (articleId: string, payload: Partial<IArticle>, userId: string) => {
-  // Check if article exists
+
   const article = await Article.findById(articleId);
   if (!article) {
     throw new ApiError(404, "Article not found");
   }
-
-  // Check if user is the author
   if (article.author.toString() !== userId) {
     throw new ApiError(403, "You are not authorized to update this article");
   }
-
-  // If title is being updated, regenerate slug
   if (payload.title && payload.title !== article.title) {
     const slug = payload.title
       .toLowerCase()
       .replace(/[^a-zA-Z0-9]+/g, "-")
       .replace(/^-+|-+$/g, "");
-
-    // Check if new slug already exists (excluding current article)
     const existingArticle = await Article.findOne({ slug, _id: { $ne: articleId } });
     if (existingArticle) {
       throw new ApiError(
@@ -131,8 +123,6 @@ const updateArticle = async (articleId: string, payload: Partial<IArticle>, user
 
     payload.slug = slug;
   }
-
-  // Update article
   const updatedArticle = await Article.findByIdAndUpdate(
     articleId,
     { $set: payload },
@@ -165,7 +155,6 @@ const deleteArticle = async (articleId: string, userId: string) => {
 
 const approveArticle = async (
   articleId: string,
-  status: "published" | "rejected",
   adminId: string,
 ) => {
   // Check if article exists
@@ -180,15 +169,50 @@ const approveArticle = async (
     throw new ApiError(403, "You are not authorized to approve articles");
   }
 
-  // Update article status
+  // Update article status to published
   const updatedArticle = await Article.findByIdAndUpdate(
     articleId,
     {
       $set: {
-        status,
-        ...(status === "published" && !article.publishedAt ? { publishedAt: new Date() } : {}),
+        status: "published",
+        publishedAt: article.publishedAt || new Date(),
       },
     },
+    { new: true, runValidators: true },
+  ).lean();
+
+  return updatedArticle;
+};
+
+const rejectArticle = async (
+  articleId: string,
+  adminId: string,
+  rejectionReason?: string,
+) => {
+  // Check if article exists
+  const article = await Article.findById(articleId);
+  if (!article) {
+    throw new ApiError(404, "Article not found");
+  }
+
+  // Check if user is admin
+  const admin = await User.findById(adminId);
+  if (!admin || admin.role !== "admin") {
+    throw new ApiError(403, "You are not authorized to reject articles");
+  }
+
+  // Update article status to rejected
+  const updateData: any = {
+    status: "rejected",
+  };
+
+  if (rejectionReason) {
+    updateData.rejectionReason = rejectionReason;
+  }
+
+  const updatedArticle = await Article.findByIdAndUpdate(
+    articleId,
+    { $set: updateData },
     { new: true, runValidators: true },
   ).lean();
 
@@ -224,5 +248,6 @@ export const ArticleServices = {
   updateArticle,
   deleteArticle,
   approveArticle,
+  rejectArticle,
   getPendingArticles,
 };

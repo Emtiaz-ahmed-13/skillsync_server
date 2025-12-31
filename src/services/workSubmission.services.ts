@@ -5,7 +5,6 @@ import { WorkSubmission } from "../models/workSubmission.model";
 import ApiError from "../utils/ApiError";
 
 const createWorkSubmission = async (payload: any) => {
-  // Verify that project, sprint, and freelancer exist
   const project = await Project.findById(payload.projectId);
   if (!project) {
     throw new ApiError(404, "Project not found");
@@ -22,7 +21,10 @@ const createWorkSubmission = async (payload: any) => {
   }
 
   const workSubmission = await WorkSubmission.create(payload);
-  return workSubmission.toObject();
+  return {
+    ...workSubmission.toObject(),
+    id: workSubmission._id,
+  };
 };
 
 const getWorkSubmissionsByProject = async (projectId: string) => {
@@ -34,7 +36,7 @@ const getWorkSubmissionsByProject = async (projectId: string) => {
 
   return workSubmissions.map((workSubmission) => ({
     ...workSubmission,
-    id: workSubmission._id,
+    id: workSubmission._id.toString(),
   }));
 };
 
@@ -47,7 +49,7 @@ const getWorkSubmissionsBySprint = async (sprintId: string) => {
 
   return workSubmissions.map((workSubmission) => ({
     ...workSubmission,
-    id: workSubmission._id,
+    id: workSubmission._id.toString(),
   }));
 };
 
@@ -60,7 +62,7 @@ const getWorkSubmissionsByFreelancer = async (freelancerId: string) => {
 
   return workSubmissions.map((workSubmission) => ({
     ...workSubmission,
-    id: workSubmission._id,
+    id: workSubmission._id.toString(),
   }));
 };
 
@@ -77,7 +79,7 @@ const getWorkSubmissionById = async (workSubmissionId: string) => {
 
   return {
     ...workSubmission,
-    id: workSubmission._id,
+    id: workSubmission._id.toString(),
   };
 };
 
@@ -98,7 +100,7 @@ const updateWorkSubmission = async (workSubmissionId: string, payload: any) => {
 
   return {
     ...workSubmission,
-    id: workSubmission._id,
+    id: workSubmission._id.toString(),
   };
 };
 
@@ -124,7 +126,7 @@ const updateWorkSubmissionStatus = async (workSubmissionId: string, status: stri
 
   return {
     ...workSubmission,
-    id: workSubmission._id,
+    id: workSubmission._id.toString(),
   };
 };
 

@@ -35,6 +35,9 @@ const workSubmissionSchema = new Schema<IWorkSubmission>(
     liveLink: {
       type: String,
     },
+    meetingLink: {
+      type: String,
+    },
     notes: {
       type: String,
     },

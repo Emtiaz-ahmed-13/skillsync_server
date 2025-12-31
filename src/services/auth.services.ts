@@ -14,6 +14,7 @@ type TSignup = {
   password: string;
   role: UserRole;
   phone?: string;
+  avatar?: string;
 };
 
 type TLogin = {
@@ -22,7 +23,7 @@ type TLogin = {
 };
 
 const signup = async (payload: TSignup) => {
-  const { name, email, password, role, phone } = payload;
+  const { name, email, password, role, phone, avatar } = payload;
 
   // Check if user already exists
   const existingUser = await User.findOne({ email });
@@ -37,6 +38,7 @@ const signup = async (payload: TSignup) => {
     password,
     role,
     phone,
+    avatar,
   });
 
   // Convert Mongoose document to plain object and remove password
@@ -75,10 +77,7 @@ const signup = async (payload: TSignup) => {
 };
 
 const login = async (payload: TLogin) => {
-  // find user
-  // check whether password correct
-  // generate access and refresh token
-  // return data
+
   const { email, password } = payload;
 
   const user = await findUserByEmail(email);
@@ -89,8 +88,6 @@ const login = async (payload: TLogin) => {
 
   const userObj = user.toObject();
   const { password: _, ...userWithoutPassword } = userObj;
-
-  // Create a clean user object for token generation
   const cleanUser = {
     id: userWithoutPassword._id,
     name: userWithoutPassword.name,
@@ -120,7 +117,50 @@ const login = async (payload: TLogin) => {
   };
 };
 
+const getUserById = async (id: string) => {
+  const user = await User.findById(id).select("name email role avatar");
+  if (!user) {
+    throw new ApiError(404, "User not found");
+  }
+  return user;
+};
+
+const loginWithGoogle = async (user: any) => {
+  const userObj = user.toObject ? user.toObject() : user;
+  const { password: _, ...userWithoutPassword } = userObj;
+
+  const cleanUser = {
+    id: userWithoutPassword._id,
+    name: userWithoutPassword.name,
+    email: userWithoutPassword.email,
+    role: userWithoutPassword.role,
+    isEmailVerified: userWithoutPassword.isEmailVerified,
+    createdAt: userWithoutPassword.createdAt,
+    updatedAt: userWithoutPassword.updatedAt,
+  };
+
+  const accessToken = jwtHelpers.generateToken(
+    cleanUser,
+    config.jwt.jwt_secret as Secret,
+    config.jwt.expires_in as string
+  );
+
+  const refreshToken = jwtHelpers.generateToken(
+    cleanUser,
+    config.jwt.refresh_token_secret as Secret,
+    config.jwt.refresh_token_expires_in as string
+  );
+
+  return {
+    accessToken,
+    refreshToken,
+    user: cleanUser,
+  };
+};
+
 export const AuthServices = {
   signup,
   login,
+  getUserById,
+  loginWithGoogle,
 };

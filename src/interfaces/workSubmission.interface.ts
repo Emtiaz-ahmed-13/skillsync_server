@@ -9,6 +9,7 @@ export interface IWorkSubmission {
   remainingFeatures: string[];
   githubLink: string;
   liveLink?: string;
+  meetingLink?: string;
   notes?: string;
   status: "pending" | "review" | "approved" | "rejected";
   createdAt?: Date;

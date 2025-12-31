@@ -48,7 +48,7 @@ const getUserNotifications = async (userId: string, limit = 10, page = 1) => {
   const skip = (page - 1) * limit;
 
   const notifications = await Notification.find({ userId })
-    .populate(populateFields.slice(1)) // skip userId populate
+    .populate(populateFields.slice(1)) 
     .sort({ createdAt: -1 })
     .limit(limit)
     .skip(skip)

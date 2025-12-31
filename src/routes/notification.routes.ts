@@ -4,6 +4,7 @@ import auth from "../middlewares/auth";
 
 const router = express.Router();
 
+router.post("/", auth(), NotificationControllers.createNotification);
 router.get("/", auth(), NotificationControllers.getNotifications);
 router.get("/unread-count", auth(), NotificationControllers.getUnreadCount);
 router.get("/:id", auth(), NotificationControllers.getNotificationById);

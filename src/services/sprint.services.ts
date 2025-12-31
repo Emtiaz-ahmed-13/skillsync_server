@@ -4,14 +4,16 @@ import { Task } from "../models/task.model";
 import ApiError from "../utils/ApiError";
 
 const createSprint = async (payload: any) => {
-  // Verify that project exists
   const project = await Project.findById(payload.projectId);
   if (!project) {
     throw new ApiError(404, "Project not found");
   }
 
   const sprint = await Sprint.create(payload);
-  return sprint.toObject();
+  return {
+    ...sprint.toObject(),
+    id: sprint._id.toString(),
+  };
 };
 
 const getSprintsByProject = async (projectId: string) => {
@@ -19,7 +21,7 @@ const getSprintsByProject = async (projectId: string) => {
 
   return sprints.map((sprint) => ({
     ...sprint,
-    id: sprint._id,
+    id: sprint._id.toString(),
   }));
 };
 
@@ -32,7 +34,7 @@ const getSprintById = async (sprintId: string) => {
 
   return {
     ...sprint,
-    id: sprint._id,
+    id: sprint._id.toString(),
   };
 };
 
@@ -49,7 +51,7 @@ const updateSprint = async (sprintId: string, payload: any) => {
 
   return {
     ...sprint,
-    id: sprint._id,
+    id: sprint._id.toString(),
   };
 };
 

@@ -5,14 +5,16 @@ export interface IArticle {
   title: string;
   content: string;
   excerpt?: string;
-  author: Types.ObjectId; // Reference to User
+  author: Types.ObjectId; 
   status: "draft" | "pending" | "published" | "rejected";
   featuredImage?: string;
   tags?: string[];
+  category?: string;
   slug: string;
   views?: number;
   likes?: number;
   publishedAt?: Date;
-  createdAt: Date;
-  updatedAt: Date;
+  rejectionReason?: string;
+  createdAt?: Date;
+  updatedAt?: Date;
 }

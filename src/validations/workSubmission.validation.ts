@@ -20,6 +20,7 @@ export const updateWorkSubmissionSchema = z.object({
     remainingFeatures: z.array(z.string()).optional(),
     githubLink: z.string().url("GitHub link must be a valid URL").optional(),
     liveLink: z.string().url("Live link must be a valid URL").optional(),
+    meetingLink: z.string().url("Meeting link must be a valid URL").optional(),
     notes: z.string().optional(),
     status: z.enum(["pending", "review", "approved", "rejected"]).optional(),
   }),

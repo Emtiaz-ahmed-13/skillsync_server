@@ -3,45 +3,26 @@ import { SprintPlanningServices } from "../services/sprintPlanning.services";
 import catchAsync from "../utils/catchAsync";
 import sendResponse from "../utils/sendResponse";
 
-const generateSprintPlan = catchAsync(async (req: Request, res: Response) => {
+const generateAndCreateSprintPlan = catchAsync(async (req: Request, res: Response) => {
   const { projectId } = req.params;
-  const { method, customData } = req.body;
-  
-  const result = await SprintPlanningServices.generateAiSprintPlan(
-    projectId,
-    method
-  );
-  
-  sendResponse(res, {
-    statusCode: 200,
-    success: true,
-    message: "Sprint plan generated successfully",
-    data: result,
-  });
-});
+  const { method = "manual", customData } = req.body;
 
-const createSprintPlan = catchAsync(async (req: Request, res: Response) => {
-  const { projectId } = req.params;
-  const { method, customData } = req.body;
-  
-  const result = await SprintPlanningServices.createSprintPlan(
-    projectId,
-    method,
-    customData
-  );
-  
+  // If customData is provided, use it directly; otherwise generate default plan
+  const sprintPlan = customData || await SprintPlanningServices.generateAiSprintPlan(projectId, method);
+  const savedSprints = await SprintPlanningServices.createSprintPlan(projectId, sprintPlan);
+
   sendResponse(res, {
     statusCode: 201,
     success: true,
-    message: "Sprint plan created successfully",
-    data: result,
+    message: "Sprint plan generated and saved successfully",
+    data: savedSprints,
   });
 });
 
 const getSprintPlan = catchAsync(async (req: Request, res: Response) => {
   const { projectId } = req.params;
   const result = await SprintPlanningServices.getSprintPlan(projectId);
-  
+
   sendResponse(res, {
     statusCode: 200,
     success: true,
@@ -51,7 +32,6 @@ const getSprintPlan = catchAsync(async (req: Request, res: Response) => {
 });
 
 export const SprintPlanningControllers = {
-  generateSprintPlan,
-  createSprintPlan,
+  generateAndCreateSprintPlan,
   getSprintPlan,
 };

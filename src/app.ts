@@ -7,10 +7,11 @@ import globalErrorHandler from "./middlewares/globalErrorHandler";
 
 // Import route modules
 import { adminRoutes } from "./routes/admin.routes";
-import { aiSprintDistributionRoutes } from "./routes/aiSprintDistribution.routes";
+
 import { articleRoutes } from "./routes/article.routes";
 import { authRoutes } from "./routes/auth.routes";
 import { bidRoutes } from "./routes/bid.routes";
+import { chatRoutes } from "./routes/chat.routes";
 import { fileRoutes } from "./routes/file.routes";
 import { milestoneRoutes } from "./routes/milestone.routes";
 import { notificationRoutes } from "./routes/notification.routes";
@@ -25,12 +26,31 @@ import { timeTrackingRoutes } from "./routes/timeTracking.routes";
 import { workSubmissionRoutes } from "./routes/workSubmission.routes";
 
 const app: Application = express();
-app.use(cors());
+app.use(cors({
+  origin: process.env.CLIENT_URL || "http://localhost:3000",
+  credentials: true,
+}));
 app.use(cookieParser());
+
+import session from "express-session";
+import passport from "passport";
+import "./config/passport"; // Import passport config
 
 app.use(express.json({ limit: "50mb" }));
 app.use(express.urlencoded({ extended: true, limit: "50mb" }));
 app.use("/uploads", express.static(path.join(__dirname, "../uploads")));
+
+// Session configuration
+app.use(
+  session({
+    secret: process.env.SESSION_SECRET || "your-secret-key",
+    resave: false,
+    saveUninitialized: false,
+  })
+);
+
+app.use(passport.initialize());
+app.use(passport.session());
 
 app.get("/", (_req: Request, res: Response) => {
   res.status(200).json({
@@ -62,7 +82,7 @@ app.get("/api/v1", (_req: Request, res: Response) => {
       payments: "/api/v1/payments",
       admin: "/api/v1/admin",
       workSubmissions: "/api/v1/work-submissions",
-      aiSprintDistribution: "/api/v1/ai-sprint-distribution",
+      chat: "/api/v1/chat",
     },
   });
 });
@@ -90,7 +110,8 @@ app.use("/api/v1/work-submissions", workSubmissionRoutes);
 app.use("/api/v1/reviews", reviewRoutes);
 app.use("/api/v1/notifications", notificationRoutes);
 app.use("/api/v1/payments", paymentRoutes);
-app.use("/api/v1/ai-sprint-distribution", aiSprintDistributionRoutes);
+app.use("/api/v1/chat", chatRoutes);
+
 app.use("/api/v1/admin", adminRoutes);
 
 app.use(globalErrorHandler);

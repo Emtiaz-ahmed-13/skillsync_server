@@ -10,7 +10,13 @@ export type NotificationType =
   | "file_uploaded"
   | "payment_received"
   | "review_received"
-  | "message_sent";
+  | "message_sent"
+  | "bid_submitted"
+  | "bid_accepted"
+  | "bid_rejected"
+  | "work_submitted"
+  | "work_accepted"
+  | "work_rejected";
 
 export interface INotification {
   _id?: Types.ObjectId;

@@ -7,13 +7,14 @@ import { createSprintSchema, updateSprintSchema } from "../validations/sprint.va
 const router = express.Router();
 
 router.post("/", auth(), validateRequest(createSprintSchema), SprintControllers.createSprint);
-
 router.get("/project/:projectId", auth(), SprintControllers.getSprintsByProject);
-
-router.get("/:id", auth(), SprintControllers.getSprintById);
-
-router.patch("/:id", auth(), validateRequest(updateSprintSchema), SprintControllers.updateSprint);
-
-router.delete("/:id", auth(), SprintControllers.deleteSprint);
+router.get("/:sprintId", auth(), SprintControllers.getSprintById);
+router.patch(
+  "/:sprintId",
+  auth(),
+  validateRequest(updateSprintSchema),
+  SprintControllers.updateSprint,
+);
+router.delete("/:sprintId", auth(), SprintControllers.deleteSprint);
 
 export const sprintRoutes = router;

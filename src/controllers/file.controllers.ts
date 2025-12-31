@@ -30,22 +30,20 @@ const createFile = catchAsync(async (req: Request & { user?: any }, res: Respons
       );
       fileUrl = uploadResult.url;
     } catch (imageKitError) {
-      // If ImageKit fails, save locally as fallback
-      console.log("ImageKit upload failed, saving locally as fallback:", (imageKitError as Error).message);
+      console.log(
+        "ImageKit upload failed, saving locally as fallback:",
+        (imageKitError as Error).message,
+      );
 
-      // Create uploads directory if it doesn't exist
       const uploadDir = path.join(__dirname, "../../uploads");
       if (!fs.existsSync(uploadDir)) {
         fs.mkdirSync(uploadDir, { recursive: true });
       }
 
-      // Save file locally
       const filePath = path.join(uploadDir, `${Date.now()}-${req.file.originalname}`);
       fs.writeFileSync(filePath, req.file.buffer);
       fileUrl = `/uploads/${Date.now()}-${req.file.originalname}`;
     }
-
-    // Prepare file data for database
     const fileData = {
       name: req.file.originalname,
       originalName: req.file.originalname,
@@ -55,10 +53,9 @@ const createFile = catchAsync(async (req: Request & { user?: any }, res: Respons
       projectId: req.body.projectId || undefined,
       milestoneId: req.body.milestoneId || undefined,
       uploadedBy: req.user?.id || req.user?._id,
-      folder: req.body.projectId ? `/projects/${req.body.projectId}` : '/user-uploads',
+      folder: req.body.projectId ? `/projects/${req.body.projectId}` : "/user-uploads",
     };
 
-    // Save file metadata to database
     const result = await FileServices.createFile(fileData);
 
     sendResponse(res, {

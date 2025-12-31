@@ -33,5 +33,6 @@ router.put(
   ProjectControllers.approveProject,
 );
 router.delete("/:id", auth(), validateRequest(projectIdSchema), ProjectControllers.deleteProject);
+router.post("/:id/sprints", auth(), ProjectControllers.createProjectSprints);
 
 export const projectRoutes = router;

@@ -22,25 +22,20 @@ type UpdateTimeTrackingPayload = {
 };
 
 const createTimeTracking = async (payload: CreateTimeTrackingPayload) => {
-  // Verify project exists
   const project = await Project.findById(payload.projectId);
   if (!project) {
     throw new ApiError(404, "Project not found");
   }
-
-  // Verify task exists (if provided)
   if (payload.taskId) {
     const task = await Task.findById(payload.taskId);
     if (!task) {
       throw new ApiError(404, "Task not found");
     }
   }
-
-  // Auto-calculate duration if start and end times are provided
   let duration = payload.duration;
   if (payload.startTime && payload.endTime && !duration) {
     const diffMs = payload.endTime.getTime() - payload.startTime.getTime();
-    duration = Math.floor(diffMs / 60000); // Convert to minutes
+    duration = Math.floor(diffMs / 60000);
   }
 
   const timeTracking = await TimeTracking.create({
@@ -74,8 +69,6 @@ const getUserTimeTracking = async (
   page: number = 1,
 ) => {
   const skip = (page - 1) * limit;
-
-  // Build query based on filters
   const query: any = { userId, ...filters };
 
   const timeTrackings = await TimeTracking.find(query)
@@ -88,8 +81,6 @@ const getUserTimeTracking = async (
     .lean();
 
   const total = await TimeTracking.countDocuments(query);
-
-  // Calculate total tracked time
   const totalTime = timeTrackings.reduce((sum, record) => sum + (record.duration || 0), 0);
 
   return {
@@ -119,17 +110,16 @@ const getUserTimeTracking = async (
 };
 
 const updateTimeTracking = async (timeTrackingId: string, payload: UpdateTimeTrackingPayload) => {
-  // Verify time tracking record exists
   const timeTracking = await TimeTracking.findById(timeTrackingId);
   if (!timeTracking) {
     throw new ApiError(404, "Time tracking record not found");
   }
 
-  // Auto-calculate duration if start and end times are provided
+  
   let duration = payload.duration;
   if (timeTracking.startTime && payload.endTime && !duration) {
     const diffMs = payload.endTime.getTime() - timeTracking.startTime.getTime();
-    duration = Math.floor(diffMs / 60000); // Convert to minutes
+    duration = Math.floor(diffMs / 60000); 
   }
 
   const updatedTimeTracking = await TimeTracking.findByIdAndUpdate(

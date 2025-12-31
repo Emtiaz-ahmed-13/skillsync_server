@@ -9,5 +9,4 @@ router.post("/", auth(), uploadSingle, FileControllers.createFile);
 router.get("/:id", FileControllers.getFileById);
 router.get("/project/:projectId", FileControllers.getProjectFiles);
 router.delete("/:id", auth(), FileControllers.deleteFile);
-
 export const fileRoutes = router;

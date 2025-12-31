@@ -1,5 +1,4 @@
 import { Task } from "../models/task.model";
-import { Sprint } from "../models/sprint.model";
 import ApiError from "../utils/ApiError";
 
 const createTask = async (payload: any) => {
