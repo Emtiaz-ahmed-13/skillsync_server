@@ -7,6 +7,7 @@ const createBid = async (payload: {
   freelancerId: string;
   amount: number;
   proposal: string;
+  resumeUrl?: string;
 }) => {
 
   const project = await Project.findById(payload.projectId);
@@ -53,6 +54,7 @@ const getProjectBids = async (projectId: string) => {
     freelancerId: bid.freelancerId,
     amount: bid.amount,
     proposal: bid.proposal,
+    resumeUrl: bid.resumeUrl,
     status: bid.status,
     createdAt: bid.createdAt,
     updatedAt: bid.updatedAt,
@@ -71,6 +73,7 @@ const getUserBids = async (freelancerId: string) => {
     freelancerId: bid.freelancerId,
     amount: bid.amount,
     proposal: bid.proposal,
+    resumeUrl: bid.resumeUrl,
     status: bid.status,
     createdAt: bid.createdAt,
     updatedAt: bid.updatedAt,

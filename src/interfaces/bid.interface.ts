@@ -7,6 +7,7 @@ export interface IBid {
   freelancerId: Types.ObjectId;
   amount: number;
   proposal: string;
+  resumeUrl?: string;
   status: "pending" | "accepted" | "rejected";
   createdAt?: Date;
   updatedAt?: Date;

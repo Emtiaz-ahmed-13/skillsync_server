@@ -41,6 +41,20 @@ const signup = async (payload: TSignup) => {
     avatar,
   });
 
+  // Send welcome email (non-blocking - don't fail signup if email fails)
+  // TEMPORARILY DISABLED - Nodemailer configuration issue
+  // TODO: Fix nodemailer import issue and re-enable
+  /*
+  try {
+    await EmailUtils.sendWelcomeEmail(email, name);
+    console.log(`✅ Welcome email sent to ${email}`);
+  } catch (error: any) {
+    console.error(`❌ Failed to send welcome email to ${email}:`, error.message);
+    // Don't throw error - user registration should still succeed
+  }
+  */
+  console.log(`⚠️ Welcome email disabled temporarily for ${email}`);
+
   // Convert Mongoose document to plain object and remove password
   const userObj = user.toObject();
   const { password: _, ...userWithoutPassword } = userObj;

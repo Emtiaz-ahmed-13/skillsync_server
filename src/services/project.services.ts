@@ -107,10 +107,19 @@ const getProjectById = async (id: string): Promise<IProject | null> => {
   if (!project) {
     return null;
   }
+
+  // Fetch project files
+  const { File } = await import("../models/file.model");
+  const files = await File.find({ projectId: id }).lean();
+
   return {
     ...project,
     id: project._id.toString(),
-  };
+    files: files.map(file => ({
+      ...file,
+      id: file._id.toString()
+    }))
+  } as any;
 };
 
 /**

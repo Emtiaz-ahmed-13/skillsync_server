@@ -4,8 +4,8 @@ export const createProjectSchema = z.object({
   body: z.object({
     title: z.string().min(1, "Title is required").trim(),
     description: z.string().min(1, "Description is required"),
-    minimumBid: z.number().positive("Minimum bid must be positive"),
-    budget: z.number().positive("Budget must be positive"),
+    minimumBid: z.coerce.number().positive("Minimum bid must be positive"),
+    budget: z.coerce.number().positive("Budget must be positive"),
     technology: z
       .array(z.string().min(1, "Technology cannot be empty"))
       .min(1, "At least one technology is required"),

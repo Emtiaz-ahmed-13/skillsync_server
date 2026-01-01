@@ -23,6 +23,9 @@ const bidSchema = new Schema<IBid>(
       required: true,
       trim: true,
     },
+    resumeUrl: {
+      type: String,
+    },
     status: {
       type: String,
       enum: ["pending", "accepted", "rejected"],
