@@ -6,8 +6,13 @@ export interface IMilestone {
   projectId: Types.ObjectId;
   title: string;
   description?: string;
+  amount?: number;
   dueDate?: Date;
+  status: "pending" | "in_progress" | "completed" | "paid";
   completed: boolean;
+  completedAt?: Date;
+  approvedBy?: Types.ObjectId;
+  approvedAt?: Date;
   order: number;
   createdAt?: Date;
   updatedAt?: Date;

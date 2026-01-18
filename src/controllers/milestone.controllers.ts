@@ -51,9 +51,22 @@ const completeMilestone = catchAsync(async (req: Request & { user?: any }, res: 
   });
 });
 
+const approveMilestone = catchAsync(async (req: Request & { user?: any }, res: Response) => {
+  const { id } = req.params;
+  const result = await MilestoneServices.approveMilestone(id, req.user.id || req.user._id);
+
+  sendResponse(res, {
+    statusCode: 200,
+    success: true,
+    message: "Milestone approved successfully",
+    data: result,
+  });
+});
+
 export const MilestoneControllers = {
   getMilestoneById,
   updateMilestone,
   deleteMilestone,
   completeMilestone,
+  approveMilestone,
 };

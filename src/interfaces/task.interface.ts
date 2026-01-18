@@ -10,6 +10,9 @@ export interface ITask {
   assignedTo?: Types.ObjectId;
   status: "todo" | "in-progress" | "review" | "completed";
   priority: "low" | "medium" | "high";
+  order: number;
+  tags?: string[];
+  attachments?: Types.ObjectId[];
   estimatedHours?: number;
   actualHours?: number;
   dueDate?: Date;

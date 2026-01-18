@@ -35,6 +35,19 @@ const taskSchema = new Schema<ITask>(
       enum: ["low", "medium", "high"],
       default: "medium",
     },
+    order: {
+      type: Number,
+      default: 0,
+    },
+    tags: {
+      type: [String],
+      default: [],
+    },
+    attachments: {
+      type: [Schema.Types.ObjectId],
+      ref: "File",
+      default: [],
+    },
     estimatedHours: {
       type: Number,
     },

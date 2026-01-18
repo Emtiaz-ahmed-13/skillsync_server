@@ -67,6 +67,49 @@ const getMilestonesByProjectId = async (projectId: string): Promise<IMilestone[]
   }));
 };
 
+const approveMilestone = async (
+  id: string,
+  userId: string,
+): Promise<IMilestone | null> => {
+  const milestone = await Milestone.findByIdAndUpdate(
+    id,
+    {
+      $set: {
+        status: "completed",
+        approvedBy: userId,
+        approvedAt: new Date(),
+      }
+    },
+    { new: true, runValidators: true },
+  ).lean();
+
+  if (!milestone) {
+    throw new ApiError(404, "Milestone not found");
+  }
+
+  return {
+    ...milestone,
+    id: milestone._id.toString(),
+  };
+};
+
+const requestPayment = async (id: string): Promise<IMilestone | null> => {
+  const milestone = await Milestone.findByIdAndUpdate(
+    id,
+    { $set: { status: "paid" } },
+    { new: true, runValidators: true },
+  ).lean();
+
+  if (!milestone) {
+    throw new ApiError(404, "Milestone not found");
+  }
+
+  return {
+    ...milestone,
+    id: milestone._id.toString(),
+  };
+};
+
 export const MilestoneServices = {
   getMilestoneById,
   updateMilestone,
@@ -74,4 +117,6 @@ export const MilestoneServices = {
   completeMilestone,
   createMilestone,
   getMilestonesByProjectId,
+  approveMilestone,
+  requestPayment,
 };

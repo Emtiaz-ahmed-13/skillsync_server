@@ -13,6 +13,7 @@ type CreatePaymentPayload = {
   currency?: string;
   description?: string;
   method?: string;
+  status?: string;
   stripePaymentIntentId?: string;
   stripeCustomerId?: string;
   metadata?: Record<string, any>;
@@ -40,7 +41,7 @@ const createPayment = async (payload: CreatePaymentPayload) => {
     throw new ApiError(404, "Freelancer not found");
   }
 
- 
+
   if (payload.milestoneId) {
     const milestone = await Milestone.findById(payload.milestoneId);
     if (!milestone) {

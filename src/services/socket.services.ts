@@ -14,7 +14,7 @@ let io: Server;
 export const initializeSocket = (httpServer: HttpServer) => {
   io = new Server(httpServer, {
     cors: {
-      origin: "*", 
+      origin: "*",
       methods: ["GET", "POST"],
     },
   });
@@ -77,3 +77,18 @@ export const getIO = () => {
   }
   return io;
 };
+
+export const emitToUser = (userId: string, event: string, data: any) => {
+  if (!io) {
+    console.error("Socket.io not initialized!");
+    return;
+  }
+  io.to(userId).emit(event, data);
+};
+
+export const SocketServices = {
+  initializeSocket,
+  getIO,
+  emitToUser,
+};
+

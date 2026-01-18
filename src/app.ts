@@ -8,6 +8,7 @@ import globalErrorHandler from "./middlewares/globalErrorHandler";
 // Import route modules
 import { adminRoutes } from "./routes/admin.routes";
 
+import aiRoutes from "./routes/ai.routes";
 import { articleRoutes } from "./routes/article.routes";
 import { authRoutes } from "./routes/auth.routes";
 import { bidRoutes } from "./routes/bid.routes";
@@ -17,6 +18,7 @@ import { milestoneRoutes } from "./routes/milestone.routes";
 import { notificationRoutes } from "./routes/notification.routes";
 import { paymentRoutes } from "./routes/payment.routes";
 import { profileRoutes } from "./routes/profile.routes";
+import { projectSummaryRoutes } from "./routes/project-summary.routes";
 import { projectRoutes } from "./routes/project.routes";
 import { reviewRoutes } from "./routes/review.routes";
 import { sprintRoutes } from "./routes/sprint.routes";
@@ -82,6 +84,8 @@ app.get("/api/v1", (_req: Request, res: Response) => {
       admin: "/api/v1/admin",
       workSubmissions: "/api/v1/work-submissions",
       chat: "/api/v1/chat",
+      ai: "/api/v1/ai",
+      projectSummary: "/api/v1/projects/:id/summary",
     },
   });
 });
@@ -98,6 +102,7 @@ app.use("/api/v1/auth", authRoutes);
 app.use("/api/v1/profile", profileRoutes);
 app.use("/api/v1/articles", articleRoutes);
 app.use("/api/v1/projects", projectRoutes);
+app.use("/api/v1/projects", projectSummaryRoutes);
 app.use("/api/v1/bids", bidRoutes);
 app.use("/api/v1/milestones", milestoneRoutes);
 app.use("/api/v1/sprints", sprintRoutes);
@@ -110,6 +115,7 @@ app.use("/api/v1/reviews", reviewRoutes);
 app.use("/api/v1/notifications", notificationRoutes);
 app.use("/api/v1/payments", paymentRoutes);
 app.use("/api/v1/chat", chatRoutes);
+app.use("/api/v1/ai", aiRoutes);
 
 app.use("/api/v1/admin", adminRoutes);
 

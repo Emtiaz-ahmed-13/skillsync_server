@@ -1,7 +1,9 @@
 import { Request, Response } from "express";
 import { PaymentServices } from "../services/payment.services";
 import catchAsync from "../utils/catchAsync";
+import { NotificationEvents } from "../utils/notification.events";
 import sendResponse from "../utils/sendResponse";
+import { StripeUtils } from "../utils/stripe.utils";
 
 const createPayment = catchAsync(async (req: Request & { user?: any }, res: Response) => {
   const result = await PaymentServices.createPayment({
@@ -85,6 +87,91 @@ const getProjectPayments = catchAsync(async (req: Request, res: Response) => {
   });
 });
 
+const createPaymentIntent = catchAsync(async (req: Request & { user?: any }, res: Response) => {
+  const { amount, currency = "usd", milestoneId, projectId, freelancerId } = req.body;
+  const clientId = req.user?.id || req.user?._id;
+
+  // Create Stripe payment intent
+  const paymentIntent = await StripeUtils.createPaymentIntent(
+    amount * 100, // Convert to cents
+    currency,
+    { milestoneId, projectId, clientId, freelancerId }
+  );
+
+  // Create payment record
+  const payment = await PaymentServices.createPayment({
+    projectId,
+    milestoneId,
+    clientId,
+    freelancerId,
+    amount,
+    currency,
+    stripePaymentIntentId: paymentIntent.id,
+    status: "processing",
+  });
+
+  sendResponse(res, {
+    statusCode: 201,
+    success: true,
+    message: "Payment intent created successfully",
+    data: {
+      payment,
+      clientSecret: paymentIntent.clientSecret,
+    },
+  });
+});
+
+const handleStripeWebhook = catchAsync(async (req: Request, res: Response) => {
+  const event = req.body;
+
+  // Handle different event types
+  switch (event.type) {
+    case "payment_intent.succeeded":
+      const paymentIntent = event.data.object;
+
+      // Update payment status
+      const payment = await PaymentServices.updatePayment(
+        paymentIntent.metadata.paymentId,
+        {
+          status: "completed",
+          paidAt: new Date(),
+          transactionId: paymentIntent.id,
+        }
+      );
+
+      // Send notification to freelancer
+      if (payment) {
+        await NotificationEvents.notifyPaymentReceived(
+          payment.id as string,
+          payment.amount,
+          payment.currency,
+          payment.freelancerId as any,
+          payment.clientId as any,
+          payment.projectId as any,
+        );
+      }
+      break;
+
+    case "payment_intent.payment_failed":
+      const failedIntent = event.data.object;
+      await PaymentServices.updatePayment(
+        failedIntent.metadata.paymentId,
+        { status: "failed" }
+      );
+      break;
+
+    default:
+      console.log(`Unhandled event type: ${event.type}`);
+  }
+
+  sendResponse(res, {
+    statusCode: 200,
+    success: true,
+    message: "Webhook processed successfully",
+    data: null,
+  });
+});
+
 export const PaymentControllers = {
   createPayment,
   getPaymentById,
@@ -92,4 +179,6 @@ export const PaymentControllers = {
   updatePayment,
   deletePayment,
   getProjectPayments,
+  createPaymentIntent,
+  handleStripeWebhook,
 };

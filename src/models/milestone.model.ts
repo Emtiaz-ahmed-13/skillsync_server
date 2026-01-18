@@ -17,12 +17,31 @@ const milestoneSchema = new Schema<IMilestone>(
       type: String,
       trim: true,
     },
+    amount: {
+      type: Number,
+      min: 0,
+    },
     dueDate: {
       type: Date,
+    },
+    status: {
+      type: String,
+      enum: ["pending", "in_progress", "completed", "paid"],
+      default: "pending",
     },
     completed: {
       type: Boolean,
       default: false,
+    },
+    completedAt: {
+      type: Date,
+    },
+    approvedBy: {
+      type: Schema.Types.ObjectId,
+      ref: "User",
+    },
+    approvedAt: {
+      type: Date,
     },
     order: {
       type: Number,
