@@ -91,14 +91,6 @@ const createPaymentIntent = catchAsync(async (req: Request & { user?: any }, res
   const { amount, currency = "usd", milestoneId, projectId, freelancerId } = req.body;
   const clientId = req.user?.id || req.user?._id;
 
-  // Create Stripe payment intent
-  const paymentIntent = await StripeUtils.createPaymentIntent(
-    amount * 100, // Convert to cents
-    currency,
-    { milestoneId, projectId, clientId, freelancerId }
-  );
-
-  // Create payment record
   const payment = await PaymentServices.createPayment({
     projectId,
     milestoneId,
@@ -106,8 +98,25 @@ const createPaymentIntent = catchAsync(async (req: Request & { user?: any }, res
     freelancerId,
     amount,
     currency,
-    stripePaymentIntentId: paymentIntent.id,
     status: "processing",
+  });
+
+  const paymentId = (payment as any)._id?.toString() || (payment as any).id;
+
+  const paymentIntent = await StripeUtils.createPaymentIntent(
+    amount * 100,
+    currency,
+    {
+      paymentId,
+      milestoneId: milestoneId || "",
+      projectId,
+      clientId: clientId.toString(),
+      freelancerId,
+    },
+  );
+
+  await PaymentServices.updatePayment(paymentId, {
+    stripePaymentIntentId: paymentIntent.id,
   });
 
   sendResponse(res, {
@@ -122,54 +131,49 @@ const createPaymentIntent = catchAsync(async (req: Request & { user?: any }, res
 });
 
 const handleStripeWebhook = catchAsync(async (req: Request, res: Response) => {
-  const event = req.body;
+  const signature = req.headers["stripe-signature"] as string;
 
-  // Handle different event types
-  switch (event.type) {
-    case "payment_intent.succeeded":
-      const paymentIntent = event.data.object;
-
-      // Update payment status
-      const payment = await PaymentServices.updatePayment(
-        paymentIntent.metadata.paymentId,
-        {
-          status: "completed",
-          paidAt: new Date(),
-          transactionId: paymentIntent.id,
-        }
-      );
-
-      // Send notification to freelancer
-      if (payment) {
-        await NotificationEvents.notifyPaymentReceived(
-          payment.id as string,
-          payment.amount,
-          payment.currency,
-          payment.freelancerId as any,
-          payment.clientId as any,
-          payment.projectId as any,
-        );
-      }
-      break;
-
-    case "payment_intent.payment_failed":
-      const failedIntent = event.data.object;
-      await PaymentServices.updatePayment(
-        failedIntent.metadata.paymentId,
-        { status: "failed" }
-      );
-      break;
-
-    default:
-      console.log(`Unhandled event type: ${event.type}`);
+  if (!signature) {
+    return res.status(400).json({ success: false, message: "Missing Stripe signature" });
   }
 
-  sendResponse(res, {
-    statusCode: 200,
-    success: true,
-    message: "Webhook processed successfully",
-    data: null,
-  });
+  let event;
+  try {
+    event = StripeUtils.verifyWebhookEvent(req.body, signature);
+  } catch (error: any) {
+    console.error("Stripe webhook verification failed:", error.message);
+    return res.status(400).json({ success: false, message: "Invalid webhook signature" });
+  }
+
+  switch (event.type) {
+    case "payment_intent.succeeded": {
+      const paymentIntent = event.data.object as { id: string };
+      const payment = await PaymentServices.updatePaymentByIntentId(paymentIntent.id, {
+        status: "completed",
+        paidAt: new Date(),
+        transactionId: paymentIntent.id,
+      });
+
+      await NotificationEvents.notifyPaymentReceived(
+        payment._id?.toString() || (payment as any).id,
+        payment.amount,
+        payment.currency,
+        payment.freelancerId as any,
+        payment.clientId as any,
+        payment.projectId as any,
+      );
+      break;
+    }
+    case "payment_intent.payment_failed": {
+      const failedIntent = event.data.object as { id: string };
+      await PaymentServices.updatePaymentByIntentId(failedIntent.id, { status: "failed" });
+      break;
+    }
+    default:
+      console.log(`Unhandled Stripe event type: ${event.type}`);
+  }
+
+  return res.status(200).json({ received: true });
 });
 
 export const PaymentControllers = {

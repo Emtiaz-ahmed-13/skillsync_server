@@ -5,10 +5,9 @@ import { User } from "../models/user.model";
 import { NotificationServices } from "./notification.services";
 
 const createProject = async (projectData: IProject): Promise<IProject> => {
-
   const projectWithStatus = {
     ...projectData,
-    status: "pending",
+    status: process.env.NODE_ENV === "development" ? "approved" : "pending",
   };
 
   const project = await Project.create(projectWithStatus);
@@ -69,26 +68,55 @@ const getProjectsByOwnerId = async (ownerId: string): Promise<IProject[]> => {
 const getApprovedProjects = async (
   limit: number = 10,
   page: number = 1,
+  filters: {
+    search?: string;
+    technology?: string;
+    minBudget?: number;
+    maxBudget?: number;
+    sort?: string;
+  } = {},
 ): Promise<{ projects: IProject[]; totalCount: number }> => {
   const skip = (page - 1) * limit;
 
-  /* 
-   * MODIFIED: Including "in-progress" projects in this list to ensure users can see 
-   * projects they have just assigned to a freelancer, as per user request to "fix" missing projects.
-   * Ideally, this should be separate, but merging for visibility.
-   */
-  const projects = await Project.find({ 
-      status: { $in: ["approved", "in-progress"] } 
-    })
-    .sort({ createdAt: -1 })
+  const query: Record<string, unknown> = {
+    status: { $in: ["approved", "in-progress"] },
+  };
+
+  if (filters.search) {
+    query.$or = [
+      { title: { $regex: filters.search, $options: "i" } },
+      { description: { $regex: filters.search, $options: "i" } },
+    ];
+  }
+
+  if (filters.technology) {
+    query.technology = { $in: [filters.technology] };
+  }
+
+  if (filters.minBudget !== undefined || filters.maxBudget !== undefined) {
+    query.budget = {};
+    if (filters.minBudget !== undefined) {
+      (query.budget as Record<string, number>).$gte = filters.minBudget;
+    }
+    if (filters.maxBudget !== undefined) {
+      (query.budget as Record<string, number>).$lte = filters.maxBudget;
+    }
+  }
+
+  let sortOption: Record<string, 1 | -1> = { createdAt: -1 };
+  if (filters.sort === "budget_asc") sortOption = { budget: 1 };
+  if (filters.sort === "budget_desc") sortOption = { budget: -1 };
+  if (filters.sort === "oldest") sortOption = { createdAt: 1 };
+
+  const projects = await Project.find(query)
+    .sort(sortOption)
     .limit(limit)
     .skip(skip)
     .populate("ownerId", "name email")
+    .populate("freelancerId", "name email avatar")
     .lean();
 
-  const totalCount = await Project.countDocuments({ 
-    status: { $in: ["approved", "in-progress"] } 
-  });
+  const totalCount = await Project.countDocuments(query);
 
   return {
     projects: projects.map((project) => ({
@@ -187,7 +215,7 @@ const approveProject = async (
     await NotificationServices.createNotification({
       userId: project.ownerId,
       senderId: approvedBy,
-      type: "project_approved",
+      type: status === "approved" ? "project_approved" : "project_rejected",
       title: `Project ${status.charAt(0).toUpperCase() + status.slice(1)}`,
       message: `Your project "${project.title}" has been ${status}.`,
       projectId: project._id.toString(),

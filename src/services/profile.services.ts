@@ -112,10 +112,79 @@ const deleteProfile = async (userId: string) => {
   return { message: "Profile deleted successfully" };
 };
 
+const listFreelancers = async (filters: {
+  search?: string;
+  skill?: string;
+  limit?: number;
+  page?: number;
+}) => {
+  const limit = filters.limit || 12;
+  const page = filters.page || 1;
+  const skip = (page - 1) * limit;
+  const query: Record<string, unknown> = { role: "freelancer" };
+
+  if (filters.search) {
+    query.$or = [
+      { name: { $regex: filters.search, $options: "i" } },
+      { "freelancerProfile.bio": { $regex: filters.search, $options: "i" } },
+    ];
+  }
+
+  if (filters.skill) {
+    query["freelancerProfile.skills"] = { $in: [filters.skill] };
+  }
+
+  const [users, total] = await Promise.all([
+    User.find(query)
+      .select("name email avatar role freelancerProfile createdAt")
+      .sort({ createdAt: -1 })
+      .limit(limit)
+      .skip(skip)
+      .lean(),
+    User.countDocuments(query),
+  ]);
+
+  return {
+    freelancers: users.map((u) => ({ id: u._id, ...u })),
+    totalCount: total,
+    pagination: { page, limit, totalPages: Math.ceil(total / limit) },
+  };
+};
+
+const getPublicFreelancerProfile = async (userId: string) => {
+  const user = await User.findOne({ _id: userId, role: "freelancer" })
+    .select("name email avatar role freelancerProfile createdAt")
+    .lean();
+
+  if (!user) throw new ApiError(404, "Freelancer not found");
+
+  const { Review } = await import("../models/review.model");
+  const reviews = await Review.find({ revieweeId: userId })
+    .populate("reviewerId", "name avatar")
+    .sort({ createdAt: -1 })
+    .limit(10)
+    .lean();
+
+  const avgRating =
+    reviews.length > 0
+      ? reviews.reduce((sum, r) => sum + r.rating, 0) / reviews.length
+      : 0;
+
+  return {
+    ...user,
+    id: user._id,
+    reviews,
+    averageRating: Math.round(avgRating * 10) / 10,
+    reviewCount: reviews.length,
+  };
+};
+
 export const ProfileService = {
   getProfile,
   updateProfile,
   updateFreelancerProfile,
   updateClientProfile,
   deleteProfile,
+  listFreelancers,
+  getPublicFreelancerProfile,
 };

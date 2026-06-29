@@ -1,9 +1,16 @@
 {
   "version": 2,
+  "buildCommand": "npm run vercel-build",
+  "installCommand": "npm install",
+  "framework": null,
   "builds": [
     {
       "src": "api/index.ts",
-      "use": "@vercel/node"
+      "use": "@vercel/node",
+      "config": {
+        "maxDuration": 30,
+        "memory": 1024
+      }
     }
   ],
   "routes": [
@@ -11,8 +18,5 @@
       "src": "/(.*)",
       "dest": "/api/index.ts"
     }
-  ],
-  "installCommand": "npm install",
-  "buildCommand": "echo 'Skipping build step for serverless functions'",
-  "outputDirectory": "."
+  ]
 }

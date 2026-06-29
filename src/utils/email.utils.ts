@@ -2,7 +2,7 @@ import dotenv from "dotenv";
 import nodemailer from "nodemailer";
 
 dotenv.config();
-const transporter = nodemailer.createTransporter({
+const transporter = nodemailer.createTransport({
   host: process.env.SMTP_HOST || "smtp.gmail.com",
   port: parseInt(process.env.SMTP_PORT || "587"),
   secure: false, // true for 465, false for other ports
@@ -102,9 +102,43 @@ const sendMilestoneCompletionEmail = async (
   return await sendEmail(to, subject, html);
 };
 
+const sendVerificationEmail = async (to: string, name: string, token: string) => {
+  const clientUrl = process.env.CLIENT_URL || "http://localhost:3000";
+  const verifyUrl = `${clientUrl}/auth/verify-email?token=${token}`;
+  const subject = "Verify your SkillSync email";
+  const html = `
+    <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
+      <h2>Hi ${name}, verify your email</h2>
+      <p>Click the button below to verify your SkillSync account:</p>
+      <p><a href="${verifyUrl}" style="display:inline-block;padding:12px 24px;background:#6366f1;color:#fff;text-decoration:none;border-radius:8px;">Verify Email</a></p>
+      <p>Or copy this link: ${verifyUrl}</p>
+      <p>This link expires in 24 hours.</p>
+    </div>
+  `;
+  return await sendEmail(to, subject, html);
+};
+
+const sendPasswordResetEmail = async (to: string, name: string, token: string) => {
+  const clientUrl = process.env.CLIENT_URL || "http://localhost:3000";
+  const resetUrl = `${clientUrl}/auth/reset-password?token=${token}`;
+  const subject = "Reset your SkillSync password";
+  const html = `
+    <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
+      <h2>Password reset request</h2>
+      <p>Hi ${name}, we received a request to reset your password.</p>
+      <p><a href="${resetUrl}" style="display:inline-block;padding:12px 24px;background:#6366f1;color:#fff;text-decoration:none;border-radius:8px;">Reset Password</a></p>
+      <p>Or copy this link: ${resetUrl}</p>
+      <p>This link expires in 1 hour. If you didn't request this, ignore this email.</p>
+    </div>
+  `;
+  return await sendEmail(to, subject, html);
+};
+
 export const EmailUtils = {
   sendEmail,
   sendWelcomeEmail,
+  sendVerificationEmail,
+  sendPasswordResetEmail,
   sendProjectInvitationEmail,
   sendPaymentConfirmationEmail,
   sendMilestoneCompletionEmail,

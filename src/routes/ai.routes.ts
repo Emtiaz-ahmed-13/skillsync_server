@@ -1,6 +1,6 @@
 import express from "express";
 import multer from "multer";
-import { analyzePDF, analyzeText } from "../controllers/ai.controllers";
+import { analyzePDF, analyzeText, estimateTimeline } from "../controllers/ai.controllers";
 import auth from "../middlewares/auth";
 
 const router = express.Router();
@@ -22,16 +22,17 @@ const upload = multer({
 
 /**
  * POST /api/v1/ai/analyze-pdf
- * Analyze PDF project proposal with Gemini AI
+ * Analyze PDF project proposal with Groq AI
  * Requires authentication
  */
 router.post("/analyze-pdf", auth(), upload.single("pdf"), analyzePDF);
 
 /**
  * POST /api/v1/ai/analyze-text
- * Analyze project description text with Gemini AI
+ * Analyze project description text with Groq AI
  * Requires authentication
  */
 router.post("/analyze-text", auth(), analyzeText);
+router.post("/estimate-timeline", auth(), estimateTimeline);
 
 export default router;

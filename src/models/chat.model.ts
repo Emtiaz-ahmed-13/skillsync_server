@@ -4,6 +4,7 @@ export interface IChat extends Document {
   senderId: mongoose.Schema.Types.ObjectId;
   receiverId: mongoose.Schema.Types.ObjectId;
   message: string;
+  attachmentUrl?: string;
   read: boolean;
   createdAt: Date;
   updatedAt: Date;
@@ -24,6 +25,9 @@ const ChatSchema: Schema = new Schema(
     message: {
       type: String,
       required: true,
+    },
+    attachmentUrl: {
+      type: String,
     },
     read: {
       type: Boolean,

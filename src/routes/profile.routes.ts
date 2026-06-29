@@ -10,6 +10,9 @@ import {
 
 const router = express.Router();
 
+router.get("/freelancers", ProfileController.listFreelancers);
+router.get("/freelancers/:id", ProfileController.getPublicFreelancerProfile);
+
 router.use(auth());
 
 router.get("/me", ProfileController.getProfile);

@@ -1,4 +1,5 @@
 import { Bid } from "../models/bid.model";
+import { Milestone } from "../models/milestone.model";
 import { Project } from "../models/project.model";
 import ApiError from "../utils/ApiError";
 
@@ -96,8 +97,42 @@ const updateBidStatus = async (bidId: string, status: "accepted" | "rejected", u
       { projectId: bid.projectId, _id: { $ne: bid._id } },
       { status: "rejected" },
     );
-     await Project.findByIdAndUpdate(bid.projectId, { status: "in-progress" });
-  
+
+    await Project.findByIdAndUpdate(bid.projectId, {
+      status: "in-progress",
+      freelancerId: bid.freelancerId,
+    });
+
+    const existingMilestones = await Milestone.countDocuments({ projectId: bid.projectId });
+    if (existingMilestones === 0) {
+      const amount = bid.amount;
+      await Milestone.insertMany([
+        {
+          projectId: bid.projectId,
+          title: "Project Kickoff",
+          description: "Initial setup, planning, and requirements confirmation",
+          amount: Math.round(amount * 0.3),
+          order: 1,
+          status: "pending",
+        },
+        {
+          projectId: bid.projectId,
+          title: "Core Development",
+          description: "Main deliverables and milestone work",
+          amount: Math.round(amount * 0.4),
+          order: 2,
+          status: "pending",
+        },
+        {
+          projectId: bid.projectId,
+          title: "Final Delivery",
+          description: "Review, revisions, and project handoff",
+          amount: Math.round(amount * 0.3),
+          order: 3,
+          status: "pending",
+        },
+      ]);
+    }
   }
   bid.status = status;
   await bid.save();

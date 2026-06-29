@@ -5,10 +5,11 @@ import sendResponse from "../utils/sendResponse";
 
 const generateAndCreateSprintPlan = catchAsync(async (req: Request, res: Response) => {
   const { projectId } = req.params;
-  const { method = "manual", customData } = req.body;
+  const { method = "auto", customData } = req.body;
 
-  // If customData is provided, use it directly; otherwise generate default plan
-  const sprintPlan = customData || await SprintPlanningServices.generateAiSprintPlan(projectId, method);
+  const sprintPlan =
+    customData ||
+    (await SprintPlanningServices.generateAiSprintPlan(projectId, method));
   const savedSprints = await SprintPlanningServices.createSprintPlan(projectId, sprintPlan);
 
   sendResponse(res, {

@@ -1,11 +1,9 @@
-import { GoogleGenerativeAI } from "@google/generative-ai";
 import { Bid } from "../models/bid.model";
 import { Chat } from "../models/chat.model";
 import { Project } from "../models/project.model";
 import { ProjectSummary } from "../models/projectSummary.model";
 import { WorkSubmission } from "../models/workSubmission.model";
-
-const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY || "");
+import { generateGroqCompletion, parseJsonFromAI } from "../utils/groq.utils";
 
 interface AISummaryResult {
     overview: string;
@@ -18,7 +16,7 @@ interface AISummaryResult {
 }
 
 /**
- * Generate AI-powered project summary using Gemini
+ * Generate AI-powered project summary using Groq
  */
 export const generateAISummary = async (projectData: any): Promise<AISummaryResult> => {
     try {
@@ -69,20 +67,8 @@ Focus on:
 4. Technical implementation
 5. Areas for improvement`;
 
-        const model = genAI.getGenerativeModel({ model: "gemini-pro" });
-        const result = await model.generateContent(prompt);
-        const response = await result.response;
-        const text = response.text().trim();
-
-        // Clean and parse JSON response
-        let cleanedText = text;
-        if (cleanedText.startsWith("```json")) {
-            cleanedText = cleanedText.replace(/```json\n?/g, "").replace(/```\n?/g, "");
-        } else if (cleanedText.startsWith("```")) {
-            cleanedText = cleanedText.replace(/```\n?/g, "");
-        }
-
-        const aiSummary: AISummaryResult = JSON.parse(cleanedText);
+        const text = await generateGroqCompletion(prompt);
+        const aiSummary = parseJsonFromAI<AISummaryResult>(text);
 
         // Validate response
         if (

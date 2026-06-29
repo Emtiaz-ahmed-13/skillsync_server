@@ -63,10 +63,40 @@ const deleteProfile = catchAsync(async (req: Request & { user?: any }, res: Resp
   });
 });
 
+const listFreelancers = catchAsync(async (req: Request, res: Response) => {
+  const { search, skill, limit = 12, page = 1 } = req.query;
+  const result = await ProfileService.listFreelancers({
+    search: search as string | undefined,
+    skill: skill as string | undefined,
+    limit: parseInt(limit as string),
+    page: parseInt(page as string),
+  });
+
+  sendResponse(res, {
+    statusCode: 200,
+    success: true,
+    message: "Freelancers retrieved successfully",
+    data: result,
+  });
+});
+
+const getPublicFreelancerProfile = catchAsync(async (req: Request, res: Response) => {
+  const result = await ProfileService.getPublicFreelancerProfile(req.params.id);
+
+  sendResponse(res, {
+    statusCode: 200,
+    success: true,
+    message: "Freelancer profile retrieved successfully",
+    data: result,
+  });
+});
+
 export const ProfileController = {
   getProfile,
   updateProfile,
   updateFreelancerProfile,
   updateClientProfile,
   deleteProfile,
+  listFreelancers,
+  getPublicFreelancerProfile,
 };

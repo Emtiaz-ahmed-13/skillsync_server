@@ -1,6 +1,7 @@
 import { Request, Response } from "express";
 import { ProjectServices } from "../services/project.services";
 import catchAsync from "../utils/catchAsync";
+import { getOwnerIdString } from "../utils/projectHelpers";
 import sendResponse from "../utils/sendResponse";
 
 const createProject = catchAsync(async (req: Request & { user?: any }, res: Response) => {
@@ -76,8 +77,10 @@ const updateProject = catchAsync(async (req: Request & { user?: any }, res: Resp
   const userId = req.user?.id || req.user?._id;
   const userRole = req.user?.role;
 
+  const ownerId = getOwnerIdString(currentProject.ownerId);
+
   // Only project owner or admin can update the project
-  if (currentProject.ownerId !== userId && userRole !== "admin") {
+  if (ownerId !== userId?.toString() && userRole !== "admin") {
     return sendResponse(res, {
       statusCode: 403,
       success: false,
@@ -122,8 +125,10 @@ const deleteProject = catchAsync(async (req: Request & { user?: any }, res: Resp
   const userId = req.user?.id || req.user?._id;
   const userRole = req.user?.role;
 
+  const ownerId = getOwnerIdString(currentProject.ownerId);
+
   // Only project owner or admin can delete the project
-  if (currentProject.ownerId !== userId && userRole !== "admin") {
+  if (ownerId !== userId?.toString() && userRole !== "admin") {
     return sendResponse(res, {
       statusCode: 403,
       success: false,
@@ -166,10 +171,17 @@ const getProjectsByOwnerId = catchAsync(async (req: Request, res: Response) => {
 
 // Get approved projects
 const getApprovedProjects = catchAsync(async (req: Request, res: Response) => {
-  const { limit = 10, page = 1 } = req.query;
+  const { limit = 10, page = 1, search, technology, minBudget, maxBudget, sort } = req.query;
   const result = await ProjectServices.getApprovedProjects(
     parseInt(limit as string),
     parseInt(page as string),
+    {
+      search: search as string | undefined,
+      technology: technology as string | undefined,
+      minBudget: minBudget ? parseInt(minBudget as string) : undefined,
+      maxBudget: maxBudget ? parseInt(maxBudget as string) : undefined,
+      sort: sort as string | undefined,
+    },
   );
 
   sendResponse(res, {

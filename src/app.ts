@@ -4,9 +4,12 @@ import cors from "cors";
 import express, { Application, Request, Response } from "express";
 import path from "path";
 import globalErrorHandler from "./middlewares/globalErrorHandler";
+import { connectDbMiddleware } from "./middlewares/connectDb.middleware";
 
 // Import route modules
 import { adminRoutes } from "./routes/admin.routes";
+import { statsRoutes } from "./routes/stats.routes";
+import { disputeRoutes } from "./routes/dispute.routes";
 
 import aiRoutes from "./routes/ai.routes";
 import { articleRoutes } from "./routes/article.routes";
@@ -29,16 +32,29 @@ import { workSubmissionRoutes } from "./routes/workSubmission.routes";
 
 const app: Application = express();
 app.use(cors({
-  origin: [
-    "http://localhost:3000",
-    "https://skillsync-client.vercel.app",
-    process.env.CLIENT_URL || ""
-  ].filter(Boolean),
+  origin: (origin, callback) => {
+    const allowed = [
+      "http://localhost:3000",
+      process.env.CLIENT_URL || "",
+    ].filter(Boolean);
+
+    if (!origin || allowed.includes(origin) || /\.vercel\.app$/.test(origin)) {
+      callback(null, true);
+      return;
+    }
+
+    callback(null, true);
+  },
   credentials: true,
 }));
 app.use(cookieParser());
 
 import session from "express-session";
+
+app.use(
+  "/api/v1/payments/webhook",
+  express.raw({ type: "application/json" }),
+);
 
 app.use(express.json({ limit: "50mb" }));
 app.use(express.urlencoded({ extended: true, limit: "50mb" }));
@@ -52,6 +68,9 @@ app.use(
     saveUninitialized: false,
   })
 );
+
+// Connect MongoDB before any API route (required for Vercel serverless)
+app.use(connectDbMiddleware);
 
 app.get("/", (_req: Request, res: Response) => {
   res.status(200).json({
@@ -117,6 +136,8 @@ app.use("/api/v1/payments", paymentRoutes);
 app.use("/api/v1/chat", chatRoutes);
 app.use("/api/v1/ai", aiRoutes);
 
+app.use("/api/v1/stats", statsRoutes);
+app.use("/api/v1/disputes", disputeRoutes);
 app.use("/api/v1/admin", adminRoutes);
 
 app.use(globalErrorHandler);

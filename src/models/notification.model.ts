@@ -28,6 +28,8 @@ const notificationSchema = new Schema<INotification>(
         "bid_submitted",
         "bid_accepted",
         "bid_rejected",
+        "project_approved",
+        "project_rejected",
         "work_submitted",
         "work_accepted",
         "work_rejected",

@@ -89,9 +89,8 @@ const getDashboardAnalytics = async () => {
   const freelancersCount = await User.countDocuments({ role: "freelancer" });
   const adminsCount = await User.countDocuments({ role: "admin" });
   const pendingProjects = await Project.countDocuments({ status: "pending" });
-  const inProgressProjects = await Project.countDocuments({ status: "in_progress" });
+  const inProgressProjects = await Project.countDocuments({ status: "in-progress" });
   const completedProjects = await Project.countDocuments({ status: "completed" });
-  const cancelledProjects = await Project.countDocuments({ status: "cancelled" });
   const pendingPayments = await Payment.countDocuments({ status: "pending" });
   const completedPayments = await Payment.countDocuments({ status: "completed" });
   const failedPayments = await Payment.countDocuments({ status: "failed" });
@@ -122,7 +121,6 @@ const getDashboardAnalytics = async () => {
       pending: pendingProjects,
       inProgress: inProgressProjects,
       completed: completedProjects,
-      cancelled: cancelledProjects,
     },
     paymentStatus: {
       pending: pendingPayments,
@@ -143,66 +141,14 @@ const getDashboardAnalytics = async () => {
 };
 
 const getDisputes = async (limit: number = 10, page: number = 1) => {
-  const skip = (page - 1) * limit;
-  const disputes = await Payment.find({ status: "failed" })
-    .populate("projectId", "title")
-    .populate("clientId", "name email")
-    .populate("freelancerId", "name email")
-    .sort({ createdAt: -1 })
-    .limit(limit)
-    .skip(skip)
-    .lean();
-
-  const total = await Payment.countDocuments({ status: "failed" });
-
-  return {
-    disputes: disputes.map((dispute) => ({
-      id: dispute._id || dispute.id,
-      projectId: dispute.projectId,
-      clientId: dispute.clientId,
-      freelancerId: dispute.freelancerId,
-      amount: dispute.amount,
-      currency: dispute.currency,
-      status: dispute.status,
-      method: dispute.method,
-      description: dispute.description,
-      createdAt: dispute.createdAt,
-      updatedAt: dispute.updatedAt,
-    })),
-    pagination: {
-      currentPage: page,
-      totalPages: Math.ceil(total / limit),
-      totalDisputes: total,
-      hasNextPage: page < Math.ceil(total / limit),
-      hasPrevPage: page > 1,
-    },
-  };
+  const { DisputeServices } = await import("./dispute.services");
+  return DisputeServices.getDisputes(limit, page, "open");
 };
 
-const resolveDispute = async (paymentId: string, resolution: string) => {
-  const payment = await Payment.findByIdAndUpdate(
-    paymentId,
-    {
-      $set: {
-        status: resolution === "refund" ? "refunded" : "completed",
-        refundedAt: resolution === "refund" ? new Date() : undefined,
-      },
-    },
-    { new: true, runValidators: true },
-  )
-    .populate("projectId", "title")
-    .populate("clientId", "name email")
-    .populate("freelancerId", "name email");
-
-  if (!payment) {
-    throw new ApiError(404, "Payment not found");
-  }
-
-  const paymentObj = payment.toObject();
-  return {
-    message: `Dispute resolved with ${resolution}`,
-    payment: paymentObj,
-  };
+const resolveDispute = async (disputeId: string, resolution: string, adminId: string, note?: string) => {
+  const { DisputeServices } = await import("./dispute.services");
+  const status = resolution === "dismiss" ? "dismissed" : "resolved";
+  return DisputeServices.resolveDispute(disputeId, adminId, status as "resolved" | "dismissed", note);
 };
 
 export const AdminServices = {

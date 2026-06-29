@@ -24,6 +24,7 @@ type UpdatePaymentPayload = {
   transactionId?: string;
   paidAt?: Date;
   refundedAt?: Date;
+  stripePaymentIntentId?: string;
   metadata?: Record<string, any>;
 };
 
@@ -53,7 +54,7 @@ const createPayment = async (payload: CreatePaymentPayload) => {
     ...payload,
     currency: payload.currency || "USD",
     method: payload.method || "stripe",
-    status: "pending",
+    status: payload.status || "pending",
   });
 
   const paymentObj = payment.toObject();
@@ -201,11 +202,32 @@ const getProjectPayments = async (projectId: string) => {
   };
 };
 
+const updatePaymentByIntentId = async (
+  stripePaymentIntentId: string,
+  payload: UpdatePaymentPayload,
+) => {
+  const payment = await Payment.findOneAndUpdate(
+    { stripePaymentIntentId },
+    { $set: payload },
+    { new: true, runValidators: true },
+  )
+    .populate("projectId", "title")
+    .populate("clientId", "name email avatar")
+    .populate("freelancerId", "name email avatar");
+
+  if (!payment) {
+    throw new ApiError(404, "Payment not found for Stripe intent");
+  }
+
+  return payment.toObject();
+};
+
 export const PaymentServices = {
   createPayment,
   getPaymentById,
   getUserPayments,
   updatePayment,
+  updatePaymentByIntentId,
   deletePayment,
   getProjectPayments,
 };

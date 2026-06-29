@@ -31,13 +31,17 @@ const projectSchema = new Schema<IProject>(
     },
     status: {
       type: String,
-      enum: ["pending", "approved", "rejected"],
+      enum: ["pending", "approved", "rejected", "in-progress", "completed"],
       default: "pending",
     },
     ownerId: {
       type: Schema.Types.ObjectId,
       ref: "User",
       required: true,
+    },
+    freelancerId: {
+      type: Schema.Types.ObjectId,
+      ref: "User",
     },
     features: [
       {

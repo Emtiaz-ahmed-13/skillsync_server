@@ -11,8 +11,9 @@ export interface IProject {
   technology: string[];
   picture?: string;
   features?: IFeature[];
-  status: "pending" | "approved" | "rejected";
-  ownerId: string | any; // Updated to allow populated user object
+  status: "pending" | "approved" | "rejected" | "in-progress" | "completed";
+  ownerId: string | any;
+  freelancerId?: string | any;
   createdAt?: Date;
   updatedAt?: Date;
   __v?: number;

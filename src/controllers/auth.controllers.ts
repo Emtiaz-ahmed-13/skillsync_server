@@ -2,7 +2,6 @@ import { Request, Response } from "express";
 import { AuthServices } from "../services/auth.services";
 import catchAsync from "../utils/catchAsync";
 import sendResponse from "../utils/sendResponse";
-
 import { ImageKitUtils } from "../utils/imagekit.utils";
 
 const signup = catchAsync(async (req: Request, res: Response) => {
@@ -11,7 +10,7 @@ const signup = catchAsync(async (req: Request, res: Response) => {
       const uploadResult = await ImageKitUtils.uploadFile(
         req.file.buffer,
         req.file.originalname,
-        "/user-avatars"
+        "/user-avatars",
       );
       req.body.avatar = uploadResult.url;
     } catch (error) {
@@ -24,7 +23,7 @@ const signup = catchAsync(async (req: Request, res: Response) => {
   sendResponse(res, {
     statusCode: 201,
     success: true,
-    message: "User registered successfully",
+    message: "User registered successfully. Please verify your email.",
     data: result,
   });
 });
@@ -52,8 +51,63 @@ const getUserById = catchAsync(async (req: Request, res: Response) => {
   });
 });
 
+const forgotPassword = catchAsync(async (req: Request, res: Response) => {
+  const result = await AuthServices.forgotPassword(req.body.email);
+  sendResponse(res, {
+    statusCode: 200,
+    success: true,
+    message: result.message,
+    data: result,
+  });
+});
+
+const resetPassword = catchAsync(async (req: Request, res: Response) => {
+  const result = await AuthServices.resetPassword(req.body.token, req.body.password);
+  sendResponse(res, {
+    statusCode: 200,
+    success: true,
+    message: result.message,
+    data: result,
+  });
+});
+
+const verifyEmail = catchAsync(async (req: Request, res: Response) => {
+  const result = await AuthServices.verifyEmail(req.body.token);
+  sendResponse(res, {
+    statusCode: 200,
+    success: true,
+    message: result.message,
+    data: result,
+  });
+});
+
+const resendVerification = catchAsync(async (req: Request, res: Response) => {
+  const result = await AuthServices.resendVerification(req.body.email);
+  sendResponse(res, {
+    statusCode: 200,
+    success: true,
+    message: result.message,
+    data: result,
+  });
+});
+
+const githubAuth = catchAsync(async (req: Request, res: Response) => {
+  const result = await AuthServices.loginWithGitHub(req.body);
+  sendResponse(res, {
+    statusCode: 200,
+    success: true,
+    message: "GitHub login successful",
+    data: result,
+  });
+});
+
 export const AuthControllers = {
   signup,
   login,
-  getUserById
+  getUserById,
+  forgotPassword,
+  resetPassword,
+  verifyEmail,
+  resendVerification,
+  githubAuth,
 };

@@ -84,10 +84,11 @@ const getDisputes = catchAsync(async (req: Request, res: Response) => {
   });
 });
 
-const resolveDispute = catchAsync(async (req: Request, res: Response) => {
+const resolveDispute = catchAsync(async (req: Request & { user?: any }, res: Response) => {
   const { id } = req.params;
-  const { resolution } = req.body;
-  const result = await AdminServices.resolveDispute(id, resolution);
+  const { resolution, note } = req.body;
+  const adminId = req.user?.id || req.user?._id;
+  const result = await AdminServices.resolveDispute(id, resolution, adminId, note);
 
   sendResponse(res, {
     statusCode: 200,

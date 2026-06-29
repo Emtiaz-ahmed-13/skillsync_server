@@ -107,4 +107,11 @@ export const StripeUtils = {
   refundPayment,
   createCustomer,
   attachPaymentMethodToCustomer,
+  verifyWebhookEvent: (payload: Buffer | string, signature: string) => {
+    const webhookSecret = process.env.STRIPE_WEBHOOK_SECRET;
+    if (!webhookSecret) {
+      throw new Error("STRIPE_WEBHOOK_SECRET is not configured");
+    }
+    return stripe.webhooks.constructEvent(payload, signature, webhookSecret);
+  },
 };

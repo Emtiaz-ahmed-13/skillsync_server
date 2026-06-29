@@ -1,10 +1,10 @@
 import { Request, Response } from "express";
 import { Project } from "../models/project.model";
-import { analyzeProjectPDF, analyzeProjectText } from "../services/gemini.services";
+import { analyzeProjectPDF, analyzeProjectText } from "../services/ai.services";
 import ApiError from "../utils/ApiError";
 
 /**
- * Analyze PDF project proposal using Gemini AI
+ * Analyze PDF project proposal using Groq AI
  * POST /api/v1/ai/analyze-pdf
  */
 export const analyzePDF = async (req: Request, res: Response) => {
@@ -26,7 +26,7 @@ export const analyzePDF = async (req: Request, res: Response) => {
             .limit(10)
             .lean();
 
-        // Analyze PDF with Gemini AI
+        // Analyze PDF with Groq AI
         const analysis = await analyzeProjectPDF(req.file.buffer, existingProjects);
 
         res.status(200).json({
@@ -47,7 +47,7 @@ export const analyzePDF = async (req: Request, res: Response) => {
 };
 
 /**
- * Analyze project description text using Gemini AI
+ * Analyze project description text using Groq AI
  * POST /api/v1/ai/analyze-text
  */
 export const analyzeText = async (req: Request, res: Response) => {
@@ -69,7 +69,7 @@ export const analyzeText = async (req: Request, res: Response) => {
             .limit(10)
             .lean();
 
-        // Analyze text with Gemini AI
+        // Analyze text with Groq AI
         const analysis = await analyzeProjectText(description, existingProjects);
 
         res.status(200).json({
@@ -85,6 +85,35 @@ export const analyzeText = async (req: Request, res: Response) => {
             error: {
                 statusCode: error.statusCode || 500,
             },
+        });
+    }
+};
+
+export const estimateTimeline = async (req: Request, res: Response) => {
+    try {
+        const { title, description, technologies, taskCount } = req.body;
+
+        if (!title || !description) {
+            throw new ApiError(400, "Project title and description are required");
+        }
+
+        const { estimateProjectTimeline } = await import("../services/ai.services");
+        const estimate = await estimateProjectTimeline({
+            title,
+            description,
+            technologies,
+            taskCount,
+        });
+
+        res.status(200).json({
+            success: true,
+            message: "Timeline estimated successfully",
+            data: estimate,
+        });
+    } catch (error: any) {
+        res.status(error.statusCode || 500).json({
+            success: false,
+            message: error.message || "Timeline estimation failed",
         });
     }
 };
